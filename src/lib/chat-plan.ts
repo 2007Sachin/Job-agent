@@ -16,19 +16,18 @@ export type TurnPlan = {
 const APPROVAL = new Set<ToolName>(["cold_email", "save_job"]);
 
 export function findMentionedBot(text: string, bots: BotDef[], currentId: string): BotDef | null {
-  const match = text.match(/@([a-zA-Z][a-zA-Z0-9 ]{1,40})/);
-  if (!match) return null;
-  const needle = match[1].trim().toLowerCase();
-  return bots.find((b) => b.id !== currentId && b.name.toLowerCase().startsWith(needle.slice(0, Math.max(4, needle.length)))) ??
-    bots.find((b) => b.id !== currentId && needle.includes(b.name.toLowerCase())) ??
-    null;
+  const low = text.toLowerCase();
+  return bots
+    .filter((b) => b.id !== currentId)
+    .sort((a, b) => b.name.length - a.name.length)
+    .find((b) => low.includes(`@${b.name.toLowerCase()}`)) ?? null;
 }
 
 export function planTurn(text: string, bot: BotDef, bots: BotDef[], skills: SkillDef[]): TurnPlan {
   const mentioned = findMentionedBot(text, bots, bot.id);
   const active = mentioned ?? bot;
   const allow = allowedTools(active, skills);
-  const q = text.replace(/@[a-zA-Z][a-zA-Z0-9 ]{1,40}/, "").trim();
+  const q = text.replace(new RegExp(`@${active.name}`, "i"), "").trim();
   const low = q.toLowerCase();
   const tools: PlannedTool[] = [];
 
