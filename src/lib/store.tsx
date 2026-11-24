@@ -17,6 +17,7 @@ import {
   type Job,
   type Outreach,
   type Profile,
+  type SessionUser,
   type Stage,
 } from "./types";
 import { BUILTIN_BOTS, BUILTIN_SKILLS, type BotDef, type ChatMessage, type SkillDef } from "./workspace";
@@ -69,6 +70,18 @@ async function persistWorkspace(s: AppState) {
       created_at: message.createdAt,
     });
   }
+}
+
+function scopeToUser(s: AppState, user: SessionUser): AppState {
+  if (s.user?.id === user.id) {
+    return { ...s, user, profile: { ...s.profile, email: s.profile.email || user.email } };
+  }
+  return {
+    ...initial,
+    user,
+    profile: { ...emptyProfile(), email: user.email },
+    syncNote: null,
+  };
 }
 
 function mergeSkills(saved: SkillDef[]): SkillDef[] {
@@ -151,11 +164,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     sb.auth.getSession().then(({ data }) => {
       const u = data.session?.user;
       if (u) {
-        setState((s) => ({
-          ...s,
-          user: { id: u.id, email: u.email ?? s.profile.email, mode: "supabase" },
-          profile: { ...s.profile, email: s.profile.email || u.email || "" },
-        }));
+        setState((s) => scopeToUser(s, { id: u.id, email: u.email ?? "", mode: "supabase" }));
         void pullRemote(u.id);
       }
     });
@@ -164,42 +173,62 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   async function pullRemote(userId: string) {
     const sb = getBrowserSupabase();
     if (!sb) return;
-    const { data, error } = await sb.from("profiles").select("*").eq("id", userId).maybeSingle();
-    if (error || !data) {
-      if (error) {
-        setState((s) => ({
-          ...s,
-          syncNote: "Signed in. Profile sync is waiting on the Supabase tables (see the migration).",
-        }));
-      }
+    const [profileRes, botsRes, skillsRes, convRes, msgRes] = await Promise.all([
+      sb.from("profiles").select("*").eq("id", userId).maybeSingle(),
+      sb.from("bots").select("*").eq("user_id", userId),
+      sb.from("skills").select("*").eq("user_id", userId),
+      sb.from("conversations").select("*").eq("user_id", userId),
+      sb.from("messages").select("*").eq("user_id", userId),
+    ]);
+    if (profileRes.error && botsRes.error) {
+      setState((s) => s.user?.id === userId ? { ...s, syncNote: "Signed in. Profile sync is waiting on the Supabase tables (see the migration)." } : s);
       return;
     }
-    setState((s) => ({
-      ...s,
-      syncNote: null,
-      profile: {
-        ...s.profile,
-        fullName: data.full_name ?? "",
-        email: data.email ?? s.profile.email,
-        onboarded: Boolean(data.onboarded),
-        targetRoles: data.target_roles ?? [],
-        locations: data.locations ?? [],
-        salaryMinLpa: data.salary_min_lpa,
-        salaryMaxLpa: data.salary_max_lpa,
-        experienceYears: data.experience_years,
-        skills: data.skills ?? [],
-        linkedinUrl: data.linkedin_url ?? "",
-        preferences: data.preferences ?? "",
-        resumeText: data.resume_text ?? "",
-        resumeFileName: data.resume_file_name ?? "",
-        emailConsent: Boolean(data.email_consent),
-        consentAt: data.consent_at,
-        smtpHost: data.smtp_host ?? "",
-        smtpPort: data.smtp_port ?? "587",
-        smtpUser: data.smtp_user ?? "",
-        smtpFrom: data.smtp_from ?? "",
-      },
-    }));
+    const data = profileRes.data;
+    setState((s) => {
+      if (s.user?.id !== userId) return s;
+      const customBots = (botsRes.data ?? []).map((row) => row.payload as BotDef).filter((b) => b && !b.builtin);
+      const customSkills = (skillsRes.data ?? []).map((row) => row.payload as SkillDef).filter((sk) => sk && !sk.builtin);
+      const conversations = (convRes.data ?? []).map((row) => ({
+        id: row.id as string,
+        title: (row.title as string) || "Chat",
+        botId: row.bot_id as string,
+        updatedAt: (row.updated_at as string) || new Date().toISOString(),
+      }));
+      const messages = (msgRes.data ?? []).map((row) => row.payload as ChatMessage).filter(Boolean);
+      return {
+        ...s,
+        syncNote: null,
+        profile: data
+          ? {
+              ...s.profile,
+              fullName: data.full_name ?? "",
+              email: data.email ?? s.profile.email,
+              onboarded: Boolean(data.onboarded),
+              targetRoles: data.target_roles ?? [],
+              locations: data.locations ?? [],
+              salaryMinLpa: data.salary_min_lpa,
+              salaryMaxLpa: data.salary_max_lpa,
+              experienceYears: data.experience_years,
+              skills: data.skills ?? [],
+              linkedinUrl: data.linkedin_url ?? "",
+              preferences: data.preferences ?? "",
+              resumeText: data.resume_text ?? "",
+              resumeFileName: data.resume_file_name ?? "",
+              emailConsent: Boolean(data.email_consent),
+              consentAt: data.consent_at,
+              smtpHost: data.smtp_host ?? "",
+              smtpPort: data.smtp_port ?? "587",
+              smtpUser: data.smtp_user ?? "",
+              smtpFrom: data.smtp_from ?? "",
+            }
+          : s.profile,
+        bots: customBots.length ? [...BUILTIN_BOTS, ...customBots] : s.bots,
+        skills: customSkills.length ? mergeSkills([...BUILTIN_SKILLS, ...customSkills]) : s.skills,
+        conversations: conversations.length ? conversations : s.conversations,
+        messages: messages.length ? messages : s.messages,
+      };
+    });
   }
 
   const pushProfile = useCallback(async (profile: Profile, userId: string) => {
@@ -236,9 +265,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const signInDemo = useCallback((email?: string) => {
     const addr = email?.trim() || "demo@jobagent.local";
     setState((s) => ({
-      ...s,
-      user: { id: "demo", email: addr, mode: "demo" },
-      profile: { ...s.profile, email: s.profile.email || addr },
+      ...scopeToUser(s, { id: "demo", email: addr, mode: "demo" }),
       syncNote: "Demo mode keeps data in this browser only.",
     }));
   }, []);
@@ -250,11 +277,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const adoptSupabaseUser = useCallback((id: string, email: string) => {
-    setState((s) => ({
-      ...s,
-      user: { id, email, mode: "supabase" },
-      profile: { ...s.profile, email: s.profile.email || email },
-    }));
+    setState((s) => scopeToUser(s, { id, email, mode: "supabase" }));
     void pullRemote(id);
   }, []);
 

@@ -24,10 +24,11 @@ function toolText(name: string, profile: Profile, query: string, attachment: str
   const job = syntheticJob(query, attachment);
   if (name === "search_jobs") {
     const hits = filterCatalog(query, profile.locations[0] ?? "").slice(0, 4);
-    const lines = (hits.length ? hits : filterCatalog("", "").slice(0, 3))
-      .map((h) => `${h.title} · ${h.company} · ${h.location} · ${h.source}`)
-      .join("\n");
-    return { detail: "Catalog matches (live boards are searched from the Jobs page).", draft: lines };
+    const lines = hits.map((h) => `${h.title} · ${h.company} · ${h.location} · ${h.source}`).join("\n");
+    return {
+      detail: "Catalog matches (live boards are searched from the Jobs page).",
+      draft: lines || "No catalog role matched that search.",
+    };
   }
   if (name === "score_job") {
     const match = scoreMatch(profile, job);

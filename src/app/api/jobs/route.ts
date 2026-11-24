@@ -1,4 +1,4 @@
-import { CATALOG, filterCatalog } from "@/lib/catalog";
+import { filterCatalog } from "@/lib/catalog";
 import type { Job } from "@/lib/types";
 import { NextResponse } from "next/server";
 
@@ -158,7 +158,7 @@ export async function GET(request: Request) {
   if (!process.env.GREENHOUSE_BOARDS) warnings.push("Greenhouse boards are off until GREENHOUSE_BOARDS is set.");
   if (!process.env.LEVER_COMPANIES) warnings.push("Lever companies are off until LEVER_COMPANIES is set.");
   return NextResponse.json({
-    jobs: jobs.length ? jobs : CATALOG,
+    jobs,
     warnings,
     sources: ["Demo catalog", "Remotive", "Adzuna", "Greenhouse", "Lever"],
   });

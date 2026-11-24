@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const auth = await userFromAuthHeader(request);
   if (!auth) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const id = auth.user.id;
-  for (const table of ["outreach", "applications", "usage_daily", "gmail_tokens"] as const) {
+  for (const table of ["messages", "conversations", "skills", "bots", "outreach", "applications", "usage_daily", "gmail_tokens"] as const) {
     await auth.client.from(table).delete().eq("user_id", id);
   }
   await auth.client.from("profiles").delete().eq("id", id);

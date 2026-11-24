@@ -69,7 +69,7 @@ export default function JobsPage() {
         <ul className="text-sm text-muted">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
       )}
       {error && <p className="text-sm text-danger">{error}</p>}
-      {!rows.length && <p className="text-muted">Run a search. A demo catalog is included so the desk works offline from live APIs.</p>}
+      {!rows.length && <p className="text-muted">No roles matched. Try different words, or paste a description below.</p>}
       <ul className="divide-y divide-line border-y border-line">
         {rows.map((job) => {
           const match = scoreMatch(profile, job);
