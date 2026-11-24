@@ -2,6 +2,7 @@
 
 import { Kip } from "@/components/kip";
 import { useStore } from "@/lib/store";
+import { BOT_TEMPLATES } from "@/lib/workspace";
 import { useState } from "react";
 
 export default function BotsPage() {
@@ -27,7 +28,18 @@ export default function BotsPage() {
               <div>
                 <h2 className="text-2xl">{bot.name}</h2>
                 <p className="text-sm text-muted">{bot.role}</p>
-                <p className="mt-2 text-sm">Model: {bot.model}</p>
+                <label className="mt-2 flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={bot.enabled !== false} onChange={(e) => saveBot({ ...bot, enabled: e.target.checked })} />
+                  Enabled
+                </label>
+                <label className="mt-2 block text-sm">Model
+                  <select value={bot.model} onChange={(e) => saveBot({ ...bot, model: e.target.value })} className="mt-1 w-full border border-line bg-card px-2 py-1">
+                    {["env:LLM_MODEL", "Gemini", "Groq", "NVIDIA"].map((m) => <option key={m}>{m}</option>)}
+                  </select>
+                </label>
+                <label className="mt-2 block text-sm">Temperature {bot.temperature ?? 0.4}
+                  <input type="range" min={0} max={1} step={0.1} value={bot.temperature ?? 0.4} onChange={(e) => saveBot({ ...bot, temperature: Number(e.target.value) })} className="mt-1 w-full" />
+                </label>
                 <p className="text-sm">Skills: {bot.skillIds.map((id) => skills.find((s) => s.id === id)?.name ?? id).join(", ")}</p>
               </div>
               {!bot.builtin && (
@@ -76,6 +88,13 @@ export default function BotsPage() {
           ))}
         </fieldset>
         <button className="bg-ink px-3 py-2 text-paper">Create bot</button>
+        <div className="flex flex-wrap gap-2 pt-2">
+          {BOT_TEMPLATES.map((template) => (
+            <button key={template.name} type="button" className="border border-line px-3 py-2 text-sm" onClick={() => saveBot({ ...template, id: crypto.randomUUID(), builtin: false })}>
+              Use {template.name}
+            </button>
+          ))}
+        </div>
       </form>
     </div>
   );

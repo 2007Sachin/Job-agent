@@ -109,6 +109,7 @@ export default function ChatPage() {
     });
     setLive(null);
     setBusy(false);
+    store.bumpUsage(activeBot, bot.model);
     setAttachment("");
     setAttachmentName("");
   }

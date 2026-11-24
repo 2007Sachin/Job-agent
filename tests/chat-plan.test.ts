@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planTurn } from "../src/lib/chat-plan";
+import { planTurn, routeRoom } from "../src/lib/chat-plan";
 import { connectors } from "../src/lib/connectors";
 import { BUILTIN_BOTS, BUILTIN_SKILLS } from "../src/lib/workspace";
 
@@ -17,6 +17,16 @@ describe("planTurn", () => {
     const plan = planTurn("draft an email to the recruiter", writer, BUILTIN_BOTS, BUILTIN_SKILLS);
     const email = plan.tools.find((t) => t.name === "cold_email");
     expect(email?.needsApproval).toBe(true);
+  });
+});
+
+describe("routeRoom", () => {
+  it("mentions one bot and otherwise takes the first two", () => {
+    const named = routeRoom("@Resume Tailor rewrite this", BUILTIN_BOTS);
+    expect(named.speakerIds).toEqual(["bot-tailor"]);
+    expect(named.handoff).toContain("Resume Tailor");
+    const open = routeRoom("find a role and draft a resume", BUILTIN_BOTS);
+    expect(open.speakerIds.length).toBe(2);
   });
 });
 

@@ -1,3 +1,4 @@
+import { Kip } from "@/components/kip";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import Link from "next/link";
 
@@ -6,14 +7,16 @@ export default function HomePage() {
     <>
       <SiteHeader />
       <main>
-        <section className="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-[1.3fr_0.7fr] md:py-24">
+        <section className="relative mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-[1.3fr_0.7fr] md:py-24">
+          <div className="pointer-events-none absolute -left-10 top-8 h-40 w-40 rounded-full bg-brass/30 blur-3xl" aria-hidden />
           <div>
+            <Kip className="mb-4 h-16 w-16" />
             <h1 className="max-w-[16ch] text-5xl leading-[1.02] md:text-7xl">
-              Apply for the job in front of you.
+              A glass desk for every application.
             </h1>
             <p className="draw mt-6 h-px w-40 bg-brass" />
             <p className="mt-6 max-w-[62ch] text-lg text-muted">
-              Job-agent is for anyone hiring managers will actually read: nurses, designers, salespeople, engineers, teachers, operators, freshers, and people changing fields. It lines up a posting with your real history, drafts the paperwork, and waits for you before anything is sent.
+              Kipdesk, still labeled Job-agent here, puts several bots in one room. They search allowed sources, draft from your real history, and wait for you before anything is sent.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/signup" className="bg-brass px-4 py-3 text-paper">Create an account</Link>

@@ -1,5 +1,6 @@
 "use client";
 
+import { CommandPalette } from "./command-palette";
 import { ThemeToggle } from "./theme-toggle";
 import { useStore } from "@/lib/store";
 import Link from "next/link";
@@ -8,13 +9,14 @@ import { useEffect } from "react";
 
 const nav = [
   { href: "/chat", label: "Chat" },
+  { href: "/rooms", label: "Rooms" },
+  { href: "/tasks", label: "Tasks" },
+  { href: "/schedules", label: "Schedules" },
+  { href: "/library", label: "Library" },
+  { href: "/activity", label: "Activity" },
+  { href: "/workspace", label: "Workspace" },
   { href: "/bots", label: "Bots" },
-  { href: "/skills", label: "Skills" },
-  { href: "/connectors", label: "Connectors" },
-  { href: "/dashboard", label: "Today" },
   { href: "/jobs", label: "Jobs" },
-  { href: "/tracker", label: "Tracker" },
-  { href: "/analytics", label: "Analytics" },
   { href: "/settings", label: "Settings" },
 ];
 
@@ -68,6 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div>
         {syncNote && <p className="border-b border-line px-5 py-2 text-sm text-muted">{syncNote}</p>}
         <div className="mx-auto max-w-5xl px-5 py-8">{children}</div>
+        <CommandPalette />
       </div>
     </div>
   );

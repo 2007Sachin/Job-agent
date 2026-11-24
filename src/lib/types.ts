@@ -1,4 +1,4 @@
-import type { BotDef, ChatMessage, Conversation, SkillDef } from "./workspace";
+import type { ActivityItem, BotDef, ChatMessage, Conversation, DeskTask, LibraryItem, MemoryFact, Room, RoomMessage, Schedule, SkillDef, UsageRow } from "./workspace";
 
 export const STAGES = [
   "saved",
@@ -88,6 +88,14 @@ export type AppState = {
   skills: SkillDef[];
   conversations: Conversation[];
   messages: ChatMessage[];
+  rooms: Room[];
+  roomMessages: RoomMessage[];
+  tasks: DeskTask[];
+  schedules: Schedule[];
+  memories: MemoryFact[];
+  library: LibraryItem[];
+  activity: ActivityItem[];
+  usage: UsageRow[];
 };
 
 export const emptyProfile = (): Profile => ({

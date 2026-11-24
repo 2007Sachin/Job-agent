@@ -6,6 +6,8 @@ Chat is the main desk. Starter bots are Job Scout, Resume Tailor, Outreach Write
 
 Workspace rows for bots, skills, conversations, and messages are in `supabase/migrations/0002_workspace.sql` with row level security. Demo mode keeps them in the browser. The chat route streams a planned reply. With no model key it uses the same local templates as the job desk. Email still sends only after consent and an explicit send on the job page. Approving a card in chat does not send mail.
 
+Rooms, tasks, schedules, memory, a file library, activity, a command palette (Ctrl or Cmd K), and a usage meter are on this branch. Schedules do not run in the background. Run now performs the routine once. `supabase/migrations/0003_desk.sql` stores those records with row level security.
+
 Job-agent helps people in India apply for work in any function or seniority. It keeps a profile, searches permitted public sources, scores a posting against that profile, drafts a resume, cover letter, LinkedIn note, and email, and tracks stages. You submit applications yourself. Email goes out only after you approve that message.
 
 ## What works

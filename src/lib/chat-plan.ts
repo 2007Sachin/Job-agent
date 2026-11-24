@@ -1,5 +1,16 @@
 import { allowedTools, type BotDef, type SkillDef, type ToolName } from "./workspace";
 
+export function routeRoom(text: string, bots: BotDef[]): { speakerIds: string[]; handoff: string } {
+  const active = bots.filter((b) => b.enabled !== false && b.id !== "bot-relay");
+  const mentioned = active.filter((b) => text.toLowerCase().includes(`@${b.name.toLowerCase()}`));
+  const speakers = (mentioned.length ? mentioned : active.slice(0, 2)).slice(0, 3);
+  const names = speakers.map((b) => b.name).join(", then ");
+  return {
+    speakerIds: speakers.map((b) => b.id),
+    handoff: mentioned.length ? `Relay hands this to ${names}.` : `Relay routes the room to ${names || "no enabled bots"}.`,
+  };
+}
+
 export type PlannedTool = {
   name: ToolName;
   needsApproval: boolean;

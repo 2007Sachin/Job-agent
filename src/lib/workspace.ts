@@ -17,7 +17,54 @@ export type BotDef = {
   skillIds: string[];
   connectorIds: string[];
   builtin: boolean;
+  temperature?: number;
+  enabled?: boolean;
 };
+
+export type Room = { id: string; name: string; instructions: string; botIds: string[]; updatedAt: string };
+export type RoomMessage = { id: string; roomId: string; role: "user" | "assistant"; botId: string; content: string; createdAt: string };
+export type DeskTask = { id: string; title: string; status: "todo" | "doing" | "done"; botId: string; updatedAt: string };
+export type Schedule = { id: string; name: string; botId: string; prompt: string; time: string; enabled: boolean; lastRun: string | null };
+export type MemoryFact = { id: string; botId: string; text: string; updatedAt: string };
+export type LibraryItem = { id: string; name: string; kind: string; body: string; createdAt: string };
+export type ActivityItem = { id: string; text: string; createdAt: string };
+export type UsageRow = { botId: string; model: string; count: number };
+
+export const BOT_TEMPLATES: Omit<BotDef, "id" | "builtin">[] = [
+  {
+    name: "Offer reader",
+    avatar: "offer",
+    role: "Compares an offer with the pay and constraints already on the profile.",
+    systemPrompt: "Read only the offer text the person pastes. Do not invent equity or benefits.",
+    model: "Groq",
+    skillIds: ["skill-match"],
+    connectorIds: [],
+    temperature: 0.2,
+    enabled: true,
+  },
+  {
+    name: "Follow-up clerk",
+    avatar: "follow",
+    role: "Drafts a short follow-up the person still has to approve before it sends.",
+    systemPrompt: "Write one follow-up. Never send it.",
+    model: "Gemini",
+    skillIds: ["skill-outreach"],
+    connectorIds: [],
+    temperature: 0.4,
+    enabled: true,
+  },
+  {
+    name: "Portfolio editor",
+    avatar: "portfolio",
+    role: "Helps describe shipped work for any craft, from kitchens to code.",
+    systemPrompt: "Ask for a real project. Do not embellish the outcome.",
+    model: "NVIDIA",
+    skillIds: ["skill-resume", "skill-interview"],
+    connectorIds: [],
+    temperature: 0.5,
+    enabled: true,
+  },
+];
 
 export type ToolCard = {
   id: string;
@@ -173,6 +220,21 @@ export const BUILTIN_BOTS: BotDef[] = [
     skillIds: ["skill-interview"],
     connectorIds: [],
     builtin: true,
+    temperature: 0.4,
+    enabled: true,
+  },
+  {
+    id: "bot-relay",
+    name: "Relay",
+    avatar: "relay",
+    role: "Routes a room. Speaks the hand-off, then lets the other bots work.",
+    systemPrompt: "You only route. You do not apply or send email.",
+    model: "Gemini",
+    skillIds: ["skill-search"],
+    connectorIds: [],
+    builtin: true,
+    temperature: 0.2,
+    enabled: true,
   },
 ];
 

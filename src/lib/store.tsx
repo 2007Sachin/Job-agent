@@ -20,7 +20,7 @@ import {
   type SessionUser,
   type Stage,
 } from "./types";
-import { BUILTIN_BOTS, BUILTIN_SKILLS, type BotDef, type ChatMessage, type SkillDef } from "./workspace";
+import { BUILTIN_BOTS, BUILTIN_SKILLS, type BotDef, type ChatMessage, type DeskTask, type LibraryItem, type MemoryFact, type Room, type RoomMessage, type Schedule, type SkillDef } from "./workspace";
 
 const KEY = "jobagent.v2";
 
@@ -35,6 +35,14 @@ const initial: AppState = {
   skills: BUILTIN_SKILLS,
   conversations: [],
   messages: [],
+  rooms: [],
+  roomMessages: [],
+  tasks: [],
+  schedules: [],
+  memories: [],
+  library: [],
+  activity: [],
+  usage: [],
 };
 
 function uid() {
@@ -70,6 +78,17 @@ async function persistWorkspace(s: AppState) {
       created_at: message.createdAt,
     });
   }
+  const desk = [
+    ...s.rooms.map((row) => ({ id: row.id, kind: "room", payload: row })),
+    ...s.tasks.map((row) => ({ id: row.id, kind: "task", payload: row })),
+    ...s.schedules.map((row) => ({ id: row.id, kind: "schedule", payload: row })),
+    ...s.memories.map((row) => ({ id: row.id, kind: "memory", payload: row })),
+    ...s.library.map((row) => ({ id: row.id, kind: "library", payload: row })),
+    ...s.activity.slice(0, 40).map((row) => ({ id: row.id, kind: "activity", payload: row })),
+  ];
+  for (const row of desk) {
+    await sb.from("desk_records").upsert({ id: row.id, user_id, kind: row.kind, payload: row.payload, updated_at: now });
+  }
 }
 
 function scopeToUser(s: AppState, user: SessionUser): AppState {
@@ -82,6 +101,12 @@ function scopeToUser(s: AppState, user: SessionUser): AppState {
     profile: { ...emptyProfile(), email: user.email },
     syncNote: null,
   };
+}
+
+function mergeBots(saved: BotDef[]): BotDef[] {
+  const custom = saved.filter((b) => !BUILTIN_BOTS.some((x) => x.id === b.id));
+  const builtins = BUILTIN_BOTS.map((b) => ({ ...b, ...(saved.find((s) => s.id === b.id) ?? {}) }));
+  return [...builtins, ...custom];
 }
 
 function mergeSkills(saved: SkillDef[]): SkillDef[] {
@@ -111,6 +136,15 @@ type Store = AppState & {
   addMessage: (message: ChatMessage) => void;
   patchTool: (messageId: string, toolId: string, patch: Partial<ChatMessage["tools"][number]>) => void;
   ensureConversation: (botId: string) => string;
+  saveRoom: (room: Room) => void;
+  addRoomMessage: (message: RoomMessage) => void;
+  saveTask: (task: DeskTask) => void;
+  saveSchedule: (schedule: Schedule) => void;
+  saveMemory: (fact: MemoryFact) => void;
+  deleteMemory: (id: string) => void;
+  saveLibrary: (item: LibraryItem) => void;
+  logActivity: (text: string) => void;
+  bumpUsage: (botId: string, model: string) => void;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -124,7 +158,15 @@ function load(): AppState {
       ...initial,
       ...parsed,
       profile: { ...emptyProfile(), ...parsed.profile },
-      bots: parsed.bots?.length ? parsed.bots : BUILTIN_BOTS,
+      bots: parsed.bots?.length ? mergeBots(parsed.bots) : BUILTIN_BOTS,
+      rooms: parsed.rooms ?? [],
+      roomMessages: parsed.roomMessages ?? [],
+      tasks: parsed.tasks ?? [],
+      schedules: parsed.schedules ?? [],
+      memories: parsed.memories ?? [],
+      library: parsed.library ?? [],
+      activity: parsed.activity ?? [],
+      usage: parsed.usage ?? [],
       skills: parsed.skills?.length ? mergeSkills(parsed.skills) : BUILTIN_SKILLS,
       conversations: parsed.conversations ?? [],
       messages: parsed.messages ?? [],
@@ -173,12 +215,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   async function pullRemote(userId: string) {
     const sb = getBrowserSupabase();
     if (!sb) return;
-    const [profileRes, botsRes, skillsRes, convRes, msgRes] = await Promise.all([
+    const [profileRes, botsRes, skillsRes, convRes, msgRes, deskRes] = await Promise.all([
       sb.from("profiles").select("*").eq("id", userId).maybeSingle(),
       sb.from("bots").select("*").eq("user_id", userId),
       sb.from("skills").select("*").eq("user_id", userId),
       sb.from("conversations").select("*").eq("user_id", userId),
       sb.from("messages").select("*").eq("user_id", userId),
+      sb.from("desk_records").select("*").eq("user_id", userId),
     ]);
     if (profileRes.error && botsRes.error) {
       setState((s) => s.user?.id === userId ? { ...s, syncNote: "Signed in. Profile sync is waiting on the Supabase tables (see the migration)." } : s);
@@ -196,6 +239,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         updatedAt: (row.updated_at as string) || new Date().toISOString(),
       }));
       const messages = (msgRes.data ?? []).map((row) => row.payload as ChatMessage).filter(Boolean);
+      const desk = deskRes.data ?? [];
+      const take = <T,>(kind: string) => desk.filter((row) => row.kind === kind).map((row) => row.payload as T);
       return {
         ...s,
         syncNote: null,
@@ -227,6 +272,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         skills: customSkills.length ? mergeSkills([...BUILTIN_SKILLS, ...customSkills]) : s.skills,
         conversations: conversations.length ? conversations : s.conversations,
         messages: messages.length ? messages : s.messages,
+        rooms: desk.length ? take("room") : s.rooms,
+        tasks: desk.length ? take("task") : s.tasks,
+        schedules: desk.length ? take("schedule") : s.schedules,
+        memories: desk.length ? take("memory") : s.memories,
+        library: desk.length ? take("library") : s.library,
+        activity: desk.length ? take("activity") : s.activity,
       };
     });
   }
@@ -407,6 +458,54 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }));
   }, [commit]);
 
+  const saveRoom = useCallback((room: Room) => {
+    commit((s) => ({
+      ...s,
+      rooms: s.rooms.some((r) => r.id === room.id) ? s.rooms.map((r) => (r.id === room.id ? room : r)) : [room, ...s.rooms],
+    }));
+  }, [commit]);
+  const addRoomMessage = useCallback((message: RoomMessage) => {
+    commit((s) => ({ ...s, roomMessages: [...s.roomMessages, message] }));
+  }, [commit]);
+  const saveTask = useCallback((task: DeskTask) => {
+    commit((s) => ({
+      ...s,
+      tasks: s.tasks.some((t) => t.id === task.id) ? s.tasks.map((t) => (t.id === task.id ? task : t)) : [task, ...s.tasks],
+    }));
+  }, [commit]);
+  const saveSchedule = useCallback((schedule: Schedule) => {
+    commit((s) => ({
+      ...s,
+      schedules: s.schedules.some((x) => x.id === schedule.id) ? s.schedules.map((x) => (x.id === schedule.id ? schedule : x)) : [schedule, ...s.schedules],
+    }));
+  }, [commit]);
+  const saveMemory = useCallback((fact: MemoryFact) => {
+    commit((s) => ({
+      ...s,
+      memories: s.memories.some((m) => m.id === fact.id) ? s.memories.map((m) => (m.id === fact.id ? fact : m)) : [fact, ...s.memories],
+    }));
+  }, [commit]);
+  const deleteMemory = useCallback((id: string) => {
+    commit((s) => ({ ...s, memories: s.memories.filter((m) => m.id !== id) }));
+  }, [commit]);
+  const saveLibrary = useCallback((item: LibraryItem) => {
+    commit((s) => ({ ...s, library: [item, ...s.library] }));
+  }, [commit]);
+  const logActivity = useCallback((text: string) => {
+    commit((s) => ({
+      ...s,
+      activity: [{ id: uid(), text, createdAt: new Date().toISOString() }, ...s.activity].slice(0, 40),
+    }));
+  }, [commit]);
+  const bumpUsage = useCallback((botId: string, model: string) => {
+    commit((s) => {
+      const hit = s.usage.find((u) => u.botId === botId && u.model === model);
+      const usage = hit
+        ? s.usage.map((u) => (u === hit ? { ...u, count: u.count + 1 } : u))
+        : [...s.usage, { botId, model, count: 1 }];
+      return { ...s, usage };
+    });
+  }, [commit]);
   const replaceAll = useCallback((next: AppState) => setState(next), []);
   const wipeLocal = useCallback(() => {
     const user = state.user;
@@ -437,6 +536,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addMessage,
       patchTool,
       ensureConversation,
+      saveRoom,
+      addRoomMessage,
+      saveTask,
+      saveSchedule,
+      saveMemory,
+      deleteMemory,
+      saveLibrary,
+      logActivity,
+      bumpUsage,
     }),
     [
       state,
@@ -461,6 +569,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addMessage,
       patchTool,
       ensureConversation,
+      saveRoom,
+      addRoomMessage,
+      saveTask,
+      saveSchedule,
+      saveMemory,
+      deleteMemory,
+      saveLibrary,
+      logActivity,
+      bumpUsage,
     ],
   );
 
