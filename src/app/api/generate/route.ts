@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   if (!body.kind || !body.profile || !body.job) {
     return NextResponse.json({ error: "Missing profile, job, or kind." }, { status: 400 });
   }
-  const limit = enforceDailyCap(`llm:${body.userId || clientKey(request)}`);
+  const limit = enforceDailyCap(`llm:${clientKey(request)}`);
   if (!limit.ok) {
     return NextResponse.json(
       { error: `Daily generation cap (${limit.limit}) reached. Raise LLM_DAILY_CAP or wait until tomorrow.` },

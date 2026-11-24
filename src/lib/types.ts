@@ -1,3 +1,5 @@
+import type { BotDef, ChatMessage, Conversation, SkillDef } from "./workspace";
+
 export const STAGES = [
   "saved",
   "applied",
@@ -82,6 +84,10 @@ export type AppState = {
   outreach: Outreach[];
   feed: Job[];
   syncNote: string | null;
+  bots: BotDef[];
+  skills: SkillDef[];
+  conversations: Conversation[];
+  messages: ChatMessage[];
 };
 
 export const emptyProfile = (): Profile => ({

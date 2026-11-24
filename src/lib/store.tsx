@@ -19,8 +19,9 @@ import {
   type Profile,
   type Stage,
 } from "./types";
+import { BUILTIN_BOTS, BUILTIN_SKILLS, type BotDef, type ChatMessage, type SkillDef } from "./workspace";
 
-const KEY = "jobagent.v1";
+const KEY = "jobagent.v2";
 
 const initial: AppState = {
   user: null,
@@ -29,10 +30,50 @@ const initial: AppState = {
   outreach: [],
   feed: [],
   syncNote: null,
+  bots: BUILTIN_BOTS,
+  skills: BUILTIN_SKILLS,
+  conversations: [],
+  messages: [],
 };
 
 function uid() {
   return crypto.randomUUID();
+}
+
+async function persistWorkspace(s: AppState) {
+  const sb = getBrowserSupabase();
+  if (!sb || s.user?.mode !== "supabase") return;
+  const user_id = s.user.id;
+  const now = new Date().toISOString();
+  for (const bot of s.bots.filter((b) => !b.builtin)) {
+    await sb.from("bots").upsert({ id: bot.id, user_id, payload: bot, updated_at: now });
+  }
+  for (const skill of s.skills.filter((sk) => !sk.builtin)) {
+    await sb.from("skills").upsert({ id: skill.id, user_id, payload: skill, updated_at: now });
+  }
+  for (const conversation of s.conversations) {
+    await sb.from("conversations").upsert({
+      id: conversation.id,
+      user_id,
+      bot_id: conversation.botId,
+      title: conversation.title,
+      updated_at: conversation.updatedAt,
+    });
+  }
+  for (const message of s.messages.slice(-30)) {
+    await sb.from("messages").upsert({
+      id: message.id,
+      user_id,
+      conversation_id: message.conversationId,
+      payload: message,
+      created_at: message.createdAt,
+    });
+  }
+}
+
+function mergeSkills(saved: SkillDef[]): SkillDef[] {
+  const custom = saved.filter((s) => !BUILTIN_SKILLS.some((b) => b.id === s.id));
+  return [...BUILTIN_SKILLS, ...custom];
 }
 
 type Store = AppState & {
@@ -50,16 +91,31 @@ type Store = AppState & {
   patchOutreach: (id: string, patch: Partial<Outreach>) => void;
   replaceAll: (next: AppState) => void;
   wipeLocal: () => void;
+  saveBot: (bot: BotDef) => void;
+  deleteBot: (id: string) => void;
+  saveSkill: (skill: SkillDef) => void;
+  deleteSkill: (id: string) => void;
+  addMessage: (message: ChatMessage) => void;
+  patchTool: (messageId: string, toolId: string, patch: Partial<ChatMessage["tools"][number]>) => void;
+  ensureConversation: (botId: string) => string;
 };
 
 const Ctx = createContext<Store | null>(null);
 
 function load(): AppState {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY) || localStorage.getItem("jobagent.v1");
     if (!raw) return initial;
     const parsed = JSON.parse(raw) as AppState;
-    return { ...initial, ...parsed, profile: { ...emptyProfile(), ...parsed.profile } };
+    return {
+      ...initial,
+      ...parsed,
+      profile: { ...emptyProfile(), ...parsed.profile },
+      bots: parsed.bots?.length ? parsed.bots : BUILTIN_BOTS,
+      skills: parsed.skills?.length ? mergeSkills(parsed.skills) : BUILTIN_SKILLS,
+      conversations: parsed.conversations ?? [],
+      messages: parsed.messages ?? [],
+    };
   } catch {
     return initial;
   }
@@ -75,6 +131,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const next = recipe(stateRef.current);
     stateRef.current = next;
     setState(next);
+    void persistWorkspace(next);
     return next;
   }, []);
 
@@ -272,6 +329,61 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const saveBot = useCallback((bot: BotDef) => {
+    commit((s) => ({
+      ...s,
+      bots: s.bots.some((b) => b.id === bot.id) ? s.bots.map((b) => (b.id === bot.id ? bot : b)) : [...s.bots, bot],
+    }));
+  }, [commit]);
+
+  const deleteBot = useCallback((id: string) => {
+    commit((s) => ({ ...s, bots: s.bots.filter((b) => b.id !== id || b.builtin) }));
+  }, [commit]);
+
+  const saveSkill = useCallback((skill: SkillDef) => {
+    commit((s) => ({
+      ...s,
+      skills: s.skills.some((sk) => sk.id === skill.id)
+        ? s.skills.map((sk) => (sk.id === skill.id ? skill : sk))
+        : [...s.skills, skill],
+    }));
+  }, [commit]);
+
+  const deleteSkill = useCallback((id: string) => {
+    commit((s) => ({ ...s, skills: s.skills.filter((sk) => sk.id !== id || sk.builtin) }));
+  }, [commit]);
+
+  const ensureConversation = useCallback((botId: string) => {
+    const existing = stateRef.current.conversations.find((c) => c.botId === botId);
+    if (existing) return existing.id;
+    const id = uid();
+    const bot = stateRef.current.bots.find((b) => b.id === botId);
+    commit((s) => ({
+      ...s,
+      conversations: [{ id, title: bot?.name ?? "Chat", botId, updatedAt: new Date().toISOString() }, ...s.conversations],
+    }));
+    return id;
+  }, [commit]);
+
+  const addMessage = useCallback((message: ChatMessage) => {
+    commit((s) => ({
+      ...s,
+      messages: [...s.messages, message],
+      conversations: s.conversations.map((c) =>
+        c.id === message.conversationId ? { ...c, updatedAt: message.createdAt, botId: message.botId } : c,
+      ),
+    }));
+  }, [commit]);
+
+  const patchTool = useCallback((messageId: string, toolId: string, patch: Partial<ChatMessage["tools"][number]>) => {
+    commit((s) => ({
+      ...s,
+      messages: s.messages.map((m) =>
+        m.id === messageId ? { ...m, tools: m.tools.map((t) => (t.id === toolId ? { ...t, ...patch } : t)) } : m,
+      ),
+    }));
+  }, [commit]);
+
   const replaceAll = useCallback((next: AppState) => setState(next), []);
   const wipeLocal = useCallback(() => {
     const user = state.user;
@@ -295,6 +407,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       patchOutreach,
       replaceAll,
       wipeLocal,
+      saveBot,
+      deleteBot,
+      saveSkill,
+      deleteSkill,
+      addMessage,
+      patchTool,
+      ensureConversation,
     }),
     [
       state,
@@ -312,6 +431,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       patchOutreach,
       replaceAll,
       wipeLocal,
+      saveBot,
+      deleteBot,
+      saveSkill,
+      deleteSkill,
+      addMessage,
+      patchTool,
+      ensureConversation,
     ],
   );
 
