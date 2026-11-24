@@ -1,5 +1,6 @@
 "use client";
 
+import { Kip } from "@/components/kip";
 import { sampleProfile } from "@/lib/sample";
 import { useStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
@@ -60,12 +61,13 @@ export default function OnboardingPage() {
       return;
     }
     completeOnboarding({});
-    router.push("/dashboard");
+    router.push("/chat");
   }
 
   return (
     <form onSubmit={finish} className="max-w-2xl space-y-8">
       <div>
+        <Kip className="h-20 w-20" />
         <h1 className="text-5xl">Set the desk up</h1>
         <p className="mt-3 text-muted">Any industry, any seniority. These answers steer search and drafts. You can change them later.</p>
         <button

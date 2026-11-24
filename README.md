@@ -1,5 +1,11 @@
 # Job-agent
 
+Suggested product name: **Kipdesk**. The mascot is Kip, a river kite drawn for this app. The repository and UI still say Job-agent until the name is chosen.
+
+Chat is the main desk. Starter bots are Job Scout, Resume Tailor, Outreach Writer, Application Coach, and Interview Prep. Mention another bot with `@` to hand off. Skills are markdown instructions plus an allow-list of tools. Connectors are either a public API (Remotive, and Adzuna, Greenhouse, and Lever when configured) or assist-only (LinkedIn, Naukri, Instahyre, Hirist, Cutshort, Wellfound, Indeed, Foundit): a deep link, a paste box, and drafts. Those sites are not scraped, and their passwords are never stored.
+
+Workspace rows for bots, skills, conversations, and messages are in `supabase/migrations/0002_workspace.sql` with row level security. Demo mode keeps them in the browser. The chat route streams a planned reply. With no model key it uses the same local templates as the job desk. Email still sends only after consent and an explicit send on the job page. Approving a card in chat does not send mail.
+
 Job-agent helps people in India apply for work in any function or seniority. It keeps a profile, searches permitted public sources, scores a posting against that profile, drafts a resume, cover letter, LinkedIn note, and email, and tracks stages. You submit applications yourself. Email goes out only after you approve that message.
 
 ## What works

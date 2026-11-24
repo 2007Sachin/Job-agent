@@ -76,3 +76,8 @@ a { text-underline-offset: 0.18em; }
 }
 
 .draw { animation: draw 900ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes kip {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(6deg); }
+}

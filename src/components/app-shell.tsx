@@ -7,6 +7,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const nav = [
+  { href: "/chat", label: "Chat" },
+  { href: "/bots", label: "Bots" },
+  { href: "/skills", label: "Skills" },
+  { href: "/connectors", label: "Connectors" },
   { href: "/dashboard", label: "Today" },
   { href: "/jobs", label: "Jobs" },
   { href: "/tracker", label: "Tracker" },
@@ -23,7 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!ready) return;
     if (!user) router.replace("/login");
     else if (!profile.onboarded && pathname !== "/onboarding") router.replace("/onboarding");
-    else if (profile.onboarded && pathname === "/onboarding") router.replace("/dashboard");
+    else if (profile.onboarded && pathname === "/onboarding") router.replace("/chat");
   }, [ready, user, profile.onboarded, pathname, router]);
 
   if (!ready || !user) {
@@ -34,7 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen md:grid md:grid-cols-[220px_1fr]">
       <aside className="border-b border-line md:border-b-0 md:border-r">
         <div className="flex items-center justify-between px-5 py-4 md:block">
-          <Link href="/dashboard" className="font-display text-2xl">Job-agent</Link>
+          <Link href="/chat" className="font-display text-2xl">Job-agent</Link>
           <div className="md:mt-6 md:px-0">
             <ThemeToggle />
           </div>
