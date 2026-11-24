@@ -370,7 +370,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       ...s,
       messages: [...s.messages, message],
       conversations: s.conversations.map((c) =>
-        c.id === message.conversationId ? { ...c, updatedAt: message.createdAt, botId: message.botId } : c,
+        c.id === message.conversationId ? { ...c, updatedAt: message.createdAt } : c,
       ),
     }));
   }, [commit]);
