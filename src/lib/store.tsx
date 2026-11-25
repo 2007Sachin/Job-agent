@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { applicationFromRow, applicationRow, outreachFromRow, outreachRow } from "./remote-rows";
 import { getBrowserSupabase } from "./supabase/browser";
 import {
   emptyProfile,
@@ -88,6 +89,12 @@ async function persistWorkspace(s: AppState) {
   ];
   for (const row of desk) {
     await sb.from("desk_records").upsert({ id: row.id, user_id, kind: row.kind, payload: row.payload, updated_at: now });
+  }
+  for (const app of s.applications) {
+    await sb.from("applications").upsert(applicationRow(user_id, app));
+  }
+  for (const item of s.outreach) {
+    await sb.from("outreach").upsert(outreachRow(user_id, item));
   }
 }
 
@@ -215,13 +222,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   async function pullRemote(userId: string) {
     const sb = getBrowserSupabase();
     if (!sb) return;
-    const [profileRes, botsRes, skillsRes, convRes, msgRes, deskRes] = await Promise.all([
+    const [profileRes, botsRes, skillsRes, convRes, msgRes, deskRes, appRes, outRes] = await Promise.all([
       sb.from("profiles").select("*").eq("id", userId).maybeSingle(),
       sb.from("bots").select("*").eq("user_id", userId),
       sb.from("skills").select("*").eq("user_id", userId),
       sb.from("conversations").select("*").eq("user_id", userId),
       sb.from("messages").select("*").eq("user_id", userId),
       sb.from("desk_records").select("*").eq("user_id", userId),
+      sb.from("applications").select("*").eq("user_id", userId),
+      sb.from("outreach").select("*").eq("user_id", userId),
     ]);
     if (profileRes.error && botsRes.error) {
       setState((s) => s.user?.id === userId ? { ...s, syncNote: "Signed in. Profile sync is waiting on the Supabase tables (see the migration)." } : s);
@@ -241,6 +250,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const messages = (msgRes.data ?? []).map((row) => row.payload as ChatMessage).filter(Boolean);
       const desk = deskRes.data ?? [];
       const take = <T,>(kind: string) => desk.filter((row) => row.kind === kind).map((row) => row.payload as T);
+      const applications = (appRes.data ?? []).map((row) => applicationFromRow(row as Record<string, unknown>)).filter((row): row is NonNullable<typeof row> => Boolean(row));
+      const outreach = (outRes.data ?? []).map((row) => outreachFromRow(row as Record<string, unknown>)).filter((row): row is NonNullable<typeof row> => Boolean(row));
       return {
         ...s,
         syncNote: null,
@@ -278,6 +289,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         memories: desk.length ? take("memory") : s.memories,
         library: desk.length ? take("library") : s.library,
         activity: desk.length ? take("activity") : s.activity,
+        applications: applications.length ? applications : s.applications,
+        outreach: outreach.length ? outreach : s.outreach,
       };
     });
   }
