@@ -6,6 +6,55 @@ import { emptyProfile } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
+function ExtensionPair() {
+  const [token, setToken] = useState("");
+  const [note, setNote] = useState("");
+  async function pair() {
+    const res = await fetch("/api/extension/token", { method: "POST" });
+    const json = await res.json();
+    if (!res.ok) { setNote(json.error || "Could not make a token."); return; }
+    setToken(json.token);
+    localStorage.setItem("jobagent.extensionToken", json.token);
+    setNote("Token ready. Paste it into the extension popup. You can revoke it here.");
+  }
+  async function revoke() {
+    if (!token) return;
+    await fetch("/api/extension/revoke", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+    localStorage.removeItem("jobagent.extensionToken");
+    setToken("");
+    setNote("Token revoked on this server process.");
+  }
+  async function testSave() {
+    const saved = token || localStorage.getItem("jobagent.extensionToken") || "";
+    const res = await fetch("/api/extension/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: saved, title: "Staff Nurse", company: "City Hospital", location: "Pune", description: "Ward shifts", url: "http://127.0.0.1:3000/fixture/job" }),
+    });
+    const json = await res.json();
+    setNote(res.ok ? `Test save worked: ${json.job.title}. Open Find jobs and press Check extension saves.` : (json.error || "Test failed"));
+  }
+  return (
+    <section className="card space-y-3 p-4">
+      <h2 className="text-2xl">Connect the extension</h2>
+      <p>The extension reads only the job page you are viewing, and only after you click Save to Job-agent. It does not crawl, paginate, or apply. LinkedIn’s terms restrict automation, so Job-agent never signs in to LinkedIn or clicks anything there for you.</p>
+      <ol className="list-decimal space-y-1 pl-5">
+        <li>Chrome: open chrome://extensions and turn on Developer mode.</li>
+        <li>Load unpacked and choose the extension folder in this project.</li>
+        <li>Press Make a pairing token and paste it into the extension popup.</li>
+        <li>A Chrome Web Store listing can come later. Load unpacked is enough now.</li>
+      </ol>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className="bg-brass" onClick={() => void pair()}>Make a pairing token</button>
+        <button type="button" className="border border-line" onClick={() => void testSave()}>Test a save</button>
+        <button type="button" className="border border-line" onClick={() => void revoke()}>Revoke token</button>
+      </div>
+      {token && <p className="break-all text-sm">{token}</p>}
+      {note && <p role="status">{note}</p>}
+    </section>
+  );
+}
+
 function SettingsBody() {
   const store = useStore();
   const params = useSearchParams();
@@ -72,7 +121,8 @@ function SettingsBody() {
 
   return (
     <div className="max-w-2xl space-y-8">
-      <h1 className="text-5xl">Settings</h1>
+      <h1 className="text-4xl">Settings</h1>
+      <ExtensionPair />
       {gmail === "connected" && <p className="text-sm text-moss">Gmail is connected for sending.</p>}
       {gmail === "missing" && <p className="text-sm text-danger">Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET before connecting Gmail.</p>}
       {(gmail === "state" || gmail === "token") && <p className="text-sm text-danger">Gmail connection did not complete. Try again.</p>}

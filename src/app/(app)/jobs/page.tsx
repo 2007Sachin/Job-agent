@@ -1,5 +1,6 @@
 "use client";
 
+import { BoardSearchPanel } from "@/components/board-search";
 import { Kip } from "@/components/kip";
 import { scoreMatch } from "@/lib/match";
 import { useStore } from "@/lib/store";
@@ -55,7 +56,7 @@ export default function JobsPage() {
     <div className="space-y-10">
       <div>
         <h1 className="text-4xl">Find jobs</h1>
-        <p className="mt-2 max-w-[62ch]">Type the work you want. We search public job lists. We do not open LinkedIn for you.</p>
+        <p className="mt-2 max-w-[62ch]">Type the work you want. We search public job lists. LinkedIn and the other boards open in your own tab. We never fetch those pages.</p>
       </div>
       <form onSubmit={search} className="flex flex-col gap-3 sm:flex-row">
         <label className="flex-1 text-sm">Role or keywords
@@ -66,6 +67,7 @@ export default function JobsPage() {
         </label>
         <button className="self-end bg-brass" disabled={loading}>{loading ? "Looking…" : "Find jobs"}</button>
       </form>
+      <BoardSearchPanel keywords={q} location={location} onSaved={(job) => { setFeed([job, ...feed.filter((row) => row.id !== job.id)]); saveJob(job); }} />
       {warnings.length > 0 && (
         <ul className="text-sm text-muted">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
       )}

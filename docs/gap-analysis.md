@@ -14,7 +14,7 @@ Sellable job-application product for any role. Checked against the original surf
 | 8 | Marketing pages have no sitemap or robots file, and titles are generic. | Search engines get a thin site. | P2 | S | Add `sitemap.ts`, `robots.ts`, and a clearer title template. | fixed: `/sitemap.xml` and `/robots.txt`, title template, `NEXT_PUBLIC_SITE_URL` |
 | 9 | Nothing is billed. Pricing is a placeholder on purpose. | Cannot charge. | P2 | L | Leave open. Needs a payment account the owner controls. Do not invent a checkout. | open |
 | 10 | Resume files are not uploaded to the Storage bucket the migration creates. Only extracted text is kept. | The original file cannot be downloaded later. | P2 | M | Leave open for this pass. Needs a live Supabase project to verify the bucket policy. Text parsing still works. | open |
-| 11 | Connectors for LinkedIn, Naukri, and similar sites are links and paste boxes. | They are not a live search. | P2 | — | Leave open. Scraping and stored site passwords are out of bounds. | open |
+| 11 | Connectors for LinkedIn, Naukri, and similar sites are links and paste boxes. | They are not a live search. | P2 | — | Leave open. Scraping and stored site passwords are out of bounds. | partial: user-driven search links + click-to-save extension; no automation |
 | 12 | Email open and reply counts are whatever the person marks. | Analytics can overstate replies. | P3 | — | Leave open. No tracking pixel. | open |
 
 Owner still has to supply: Supabase project (URL, anon key, service role), Auth redirect URLs, a free LLM key if they want model drafts, Gmail or SMTP for send, `CRON_SECRET` on Vercel, and a payment provider if billing should exist. Demo mode needs none of these.
