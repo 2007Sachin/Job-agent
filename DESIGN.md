@@ -1,3 +1,3 @@
 # Design
 
-Paper and ink, with a single brass accent. Newsreader for headlines, Outfit for UI text. Light paper by day, near-black paper in dark mode. No gradient type, no icon-card grids, no side-stripe cards. Marketing is editorial. The app is a desk: lists, a kanban, and forms.
+Light, calm, and plain. Source Sans 3 everywhere. One green primary button per screen. See docs/design-system.md.

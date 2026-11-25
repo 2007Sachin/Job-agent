@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Job-agent Save</title>
+    <style>
+      body { font: 15px/1.4 -apple-system, sans-serif; margin: 12px; width: 260px; color: #1c1c1e; }
+      input, button { width: 100%; box-sizing: border-box; margin-top: 8px; min-height: 36px; }
+      p { margin: 0 0 8px; }
+    </style>
+  </head>
+  <body>
+    <p>Paste the pairing token from Job-agent Settings. This extension reads a page only when you click Save.</p>
+    <input id="token" placeholder="Pairing token" />
+    <input id="origin" placeholder="http://127.0.0.1:3000" />
+    <button id="save" type="button">Save pairing</button>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,3 +1,5 @@
+import type { ActivityItem, BotDef, ChatMessage, Conversation, DeskTask, LibraryItem, MemoryFact, Room, RoomMessage, Schedule, SkillDef, UsageRow } from "./workspace";
+
 export const STAGES = [
   "saved",
   "applied",
@@ -82,6 +84,18 @@ export type AppState = {
   outreach: Outreach[];
   feed: Job[];
   syncNote: string | null;
+  bots: BotDef[];
+  skills: SkillDef[];
+  conversations: Conversation[];
+  messages: ChatMessage[];
+  rooms: Room[];
+  roomMessages: RoomMessage[];
+  tasks: DeskTask[];
+  schedules: Schedule[];
+  memories: MemoryFact[];
+  library: LibraryItem[];
+  activity: ActivityItem[];
+  usage: UsageRow[];
 };
 
 export const emptyProfile = (): Profile => ({

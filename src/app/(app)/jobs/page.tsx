@@ -1,17 +1,35 @@
 "use client";
 
+import { BoardSearchPanel } from "@/components/board-search";
+import { ScreenState } from "@/components/screen-state";
+import { Kip } from "@/components/kip";
 import { scoreMatch } from "@/lib/match";
+import { sourceLabel } from "@/lib/source-label";
 import { useStore } from "@/lib/store";
 import type { Job } from "@/lib/types";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 export default function JobsPage() {
+  return (
+    <Suspense fallback={<p>Loading…</p>}>
+      <JobsBody />
+    </Suspense>
+  );
+}
+
+function JobsBody() {
+  const params = useSearchParams();
   const { profile, feed, setFeed, saveJob, applications } = useStore();
-  const [q, setQ] = useState(profile.targetRoles[0] ?? "");
-  const [location, setLocation] = useState(profile.locations[0] ?? "");
+  const queryFromUrl = params.get("q") || "";
+  const locationFromUrl = params.get("location") || "";
+  const auto = Boolean(queryFromUrl || locationFromUrl);
+  const [q, setQ] = useState(queryFromUrl || profile.targetRoles[0] || "");
+  const [location, setLocation] = useState(locationFromUrl || profile.locations[0] || "");
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(auto);
+  const [searched, setSearched] = useState(false);
   const [error, setError] = useState("");
   const [paste, setPaste] = useState({ url: "", title: "", company: "", description: "" });
 
@@ -19,16 +37,29 @@ export default function JobsPage() {
     e?.preventDefault();
     setLoading(true);
     setError("");
-    const res = await fetch(`/api/jobs?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}`);
-    const json = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setError("Search failed");
-      return;
+    try {
+      const res = await fetch(`/api/jobs?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}`);
+      const json = await res.json();
+      setLoading(false);
+      if (!res.ok) {
+        setError("Search failed. Try again.");
+        return;
+      }
+      setFeed(json.jobs);
+      setWarnings(json.warnings ?? []);
+      setSearched(true);
+    } catch {
+      setLoading(false);
+      setError("Search failed. Check the connection and try again.");
     }
-    setFeed(json.jobs);
-    setWarnings(json.warnings ?? []);
   }
+
+  useEffect(() => {
+    if (!auto) return;
+    void search();
+    // Run once for the query Home sent. Later edits wait for Find jobs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function ingest(e: React.FormEvent) {
     e.preventDefault();
@@ -53,8 +84,8 @@ export default function JobsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-5xl">Jobs</h1>
-        <p className="mt-2 max-w-[62ch] text-muted">Search is not tied to one function. Public sources plus a description you paste. Nothing is scraped from LinkedIn.</p>
+        <h1 className="text-4xl">Find jobs</h1>
+        <p className="mt-2 max-w-[62ch]">Type the work you want. We search public job lists. LinkedIn and the other boards open in your own tab. We never fetch those pages.</p>
       </div>
       <form onSubmit={search} className="flex flex-col gap-3 sm:flex-row">
         <label className="flex-1 text-sm">Role or keywords
@@ -63,24 +94,45 @@ export default function JobsPage() {
         <label className="flex-1 text-sm">Location
           <input value={location} onChange={(e) => setLocation(e.target.value)} className="mt-1 w-full border border-line bg-card px-3 py-2" placeholder="City, Remote, India" />
         </label>
-        <button className="self-end bg-ink px-4 py-2 text-paper" disabled={loading}>{loading ? "Searching…" : "Search"}</button>
+        <button className="self-end bg-brass" disabled={loading}>{loading ? "Looking…" : "Find jobs"}</button>
       </form>
+      <BoardSearchPanel keywords={q} location={location} onSaved={(job) => { saveJob(job); setFeed([job, ...feed.filter((row) => row.id !== job.id)]); }} />
       {warnings.length > 0 && (
         <ul className="text-sm text-muted">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
       )}
-      {error && <p className="text-sm text-danger">{error}</p>}
-      {!rows.length && <p className="text-muted">Run a search. A demo catalog is included so the desk works offline from live APIs.</p>}
-      <ul className="divide-y divide-line border-y border-line">
+      {loading && <ScreenState kind="loading" title="Looking" detail="Searching public lists." />}
+      {error && <ScreenState kind="error" title="Search failed" detail={error} onRetry={() => void search()} />}
+      {!loading && !error && !rows.length && searched && (
+        <div className="card flex items-center gap-4 p-5">
+          <Kip className="h-16 w-16" />
+          <p>No public listings for {q || "that search"}{location ? ` in ${location}` : ""}. Try other words, or paste a description below.</p>
+        </div>
+      )}
+      {!loading && !error && !rows.length && !searched && (
+        <div className="card flex items-center gap-4 p-5">
+          <Kip className="h-16 w-16" />
+          <p>No jobs yet. Press Find jobs, or paste a job description below.</p>
+        </div>
+      )}
+      <ul className="space-y-3">
         {rows.map((job) => {
           const match = scoreMatch(profile, job);
           const saved = applications.some((a) => a.job.id === job.id);
+          const letters = job.company.split(/\s+/).slice(0, 2).map((w) => w[0] || "").join("").toUpperCase();
+          const ring = 2 * Math.PI * 16;
           return (
-            <li key={job.id} className="grid gap-2 py-4 md:grid-cols-[1fr_auto] md:items-center">
+            <li key={job.id} className="card grid gap-3 p-4 md:grid-cols-[auto_1fr_auto_auto] md:items-center">
+              <div className="avatar" aria-hidden>{letters}</div>
               <div>
-                <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="text-lg underline">{job.title}</Link>
-                <p className="text-sm text-muted">{job.company} · {job.location} · {job.source}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>
-                <p className="mt-1 text-sm">{match.score} — {match.reasons[0]}</p>
+                <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="text-lg font-semibold underline">{job.title}</Link>
+                <p className="text-sm text-muted">{job.company} · {job.location} · {sourceLabel(job.source)}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>
+                <p className="mt-1 text-sm">{match.reasons[0]}</p>
               </div>
+              <svg width="44" height="44" viewBox="0 0 44 44" aria-label={`${match.score} match`}>
+                <circle cx="22" cy="22" r="16" fill="none" stroke="var(--line)" strokeWidth="4" />
+                <circle cx="22" cy="22" r="16" fill="none" stroke="var(--brass)" strokeWidth="4" strokeDasharray={ring} strokeDashoffset={ring * (1 - match.score / 100)} transform="rotate(-90 22 22)" />
+                <text x="22" y="26" textAnchor="middle" fontSize="11" fill="currentColor">{match.score}</text>
+              </svg>
               <button type="button" className="border border-line px-3 py-2 text-sm" onClick={() => saveJob(job)} disabled={saved}>
                 {saved ? "Saved" : "Save"}
               </button>
@@ -88,7 +140,7 @@ export default function JobsPage() {
           );
         })}
       </ul>
-      <form onSubmit={ingest} className="space-y-3 border border-line p-4">
+      <form onSubmit={ingest} className="card space-y-3 p-4">
         <h2 className="text-3xl">Add a posting you already have</h2>
         <p className="text-sm text-muted">Greenhouse and Lever URLs can be read from their public APIs. Anything else needs the description pasted. LinkedIn URLs are refused.</p>
         <input value={paste.url} onChange={(e) => setPaste({ ...paste, url: e.target.value })} placeholder="Job URL (optional)" className="w-full border border-line bg-card px-3 py-2" />

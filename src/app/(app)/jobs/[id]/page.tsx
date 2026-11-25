@@ -3,6 +3,7 @@
 import { CATALOG } from "@/lib/catalog";
 import { downloadDocx, downloadPdfViaPrint } from "@/lib/export-doc";
 import { scoreMatch } from "@/lib/match";
+import { sourceLabel } from "@/lib/source-label";
 import { useStore } from "@/lib/store";
 import type { Job } from "@/lib/types";
 import Link from "next/link";
@@ -24,6 +25,7 @@ export default function JobDetailPage() {
   const application = store.applications.find((a) => a.job.id === id);
   const [busy, setBusy] = useState("");
   const [note, setNote] = useState("");
+  const [resumeError, setResumeError] = useState("");
   const [approved, setApproved] = useState(false);
   const [smtpPass, setSmtpPass] = useState("");
 
@@ -51,12 +53,21 @@ export default function JobDetailPage() {
     const json = await res.json();
     setBusy("");
     if (!res.ok) {
-      setNote(json.error || "Generation failed");
+      const message = json.error || "Generation failed";
+      if (kind === "resume") setResumeError(message);
+      else setNote(message);
       return;
     }
     const text = String(json.text || "");
+    if (kind === "resume" && !text.trim()) {
+      setResumeError(json.note || "No free model key is configured. Paste a draft. Job-agent will not write a biography for you.");
+      return;
+    }
     if (json.note) setNote(json.note);
-    if (kind === "resume") store.patchApplication(saved.id, { tailoredResume: text });
+    if (kind === "resume") {
+      setResumeError("");
+      store.patchApplication(saved.id, { tailoredResume: text });
+    }
     if (kind === "cover") store.patchApplication(saved.id, { coverLetter: text });
     if (kind === "linkedin") store.patchApplication(saved.id, { linkedinNote: text });
     if (kind === "email") {
@@ -116,16 +127,23 @@ export default function JobDetailPage() {
   const relatedMail = store.outreach.filter((o) => (application && o.applicationId === application.id) || (!o.applicationId && o.subject.includes(job.title)));
 
   return (
-    <article className="space-y-10">
-      <header>
-        <p className="text-sm text-muted">{job.source} · {job.postedAt}</p>
+    <article className="space-y-6">
+      <header className="card p-5">
+        <p className="text-sm text-muted">{sourceLabel(job.source)} · {job.postedAt}</p>
         <h1 className="mt-1 text-5xl">{job.title}</h1>
         <p className="mt-2 text-muted">{job.company} · {job.location}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>
-        <p className="mt-4 max-w-[62ch]">{match.score} match. {match.reasons.join(" ")}</p>
+        <div className="mt-4 max-w-[62ch]">
+          <p className="font-medium">Fit note: {match.score} out of 100</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+            {match.reasons.map((reason) => <li key={reason}>{reason}</li>)}
+          </ul>
+          <p className="mt-2 text-sm text-muted">This is a fit note against your profile, not an ATS score.</p>
+        </div>
         <div className="mt-4 flex flex-wrap gap-3">
-          <button type="button" className="bg-ink px-3 py-2 text-sm text-paper" onClick={() => store.saveJob(job)}>
-            {application ? `On tracker: ${application.stage}` : "Save"}
+          <button type="button" className="bg-brass" onClick={() => { store.saveJob(job); setNote("Saved. Open My applications to see it."); }}>
+            {application ? "Saved" : "Save this job"}
           </button>
+          <Link href={`/chat?job=${encodeURIComponent(job.id)}`} className="border border-line px-3 py-2 text-sm">Ask about this job</Link>
           {job.url && (
             <a className="border border-line px-3 py-2 text-sm" href={job.url} target="_blank" rel="noreferrer">Open apply link</a>
           )}
@@ -158,6 +176,10 @@ export default function JobDetailPage() {
         title="Tailored resume"
         value={application?.tailoredResume ?? ""}
         onChange={(tailoredResume) => application && store.patchApplication(application.id, { tailoredResume })}
+        actionLabel="Make my resume"
+        placeholder="Paste a draft from your own history."
+        hint="Press Make my resume. The draft uses only the facts in Settings."
+        error={resumeError}
         onGenerate={() => void generate("resume")}
         busy={busy === "resume"}
         onDocx={() => downloadDocx(`${job.company}-resume.docx`, job.title, application?.tailoredResume || "")}
@@ -227,13 +249,15 @@ export default function JobDetailPage() {
   );
 }
 
-function Draft({ title, value, onChange, onGenerate, busy, onDocx, onPdf }: { title: string; value: string; onChange: (v: string) => void; onGenerate: () => void; busy: boolean; onDocx: () => void; onPdf: () => void }) {
+function Draft({ title, value, onChange, onGenerate, busy, onDocx, onPdf, actionLabel = "Write this", placeholder, hint, error }: { title: string; value: string; onChange: (v: string) => void; onGenerate: () => void; busy: boolean; onDocx: () => void; onPdf: () => void; actionLabel?: string; placeholder?: string; hint?: string; error?: string }) {
   return (
     <section className="space-y-3">
       <h2 className="text-3xl">{title}</h2>
-      <textarea rows={10} value={value} onChange={(e) => onChange(e.target.value)} className="w-full border border-line bg-card px-3 py-2" />
+      {!value && hint && <p className="text-sm text-muted">{hint}</p>}
+      <textarea rows={10} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className="w-full border border-line bg-card px-3 py-2" />
+      {error && <p className="text-sm text-danger" role="status">{error}</p>}
       <div className="flex flex-wrap gap-2">
-        <button type="button" className="border border-line px-3 py-2 text-sm" onClick={onGenerate}>{busy ? "Writing…" : "Generate"}</button>
+        <button type="button" className="border border-line" onClick={onGenerate}>{busy ? "Writing…" : actionLabel}</button>
         <button type="button" className="border border-line px-3 py-2 text-sm" onClick={onDocx} disabled={!value}>DOCX</button>
         <button type="button" className="border border-line px-3 py-2 text-sm" onClick={onPdf} disabled={!value}>Print / PDF</button>
       </div>

@@ -1,3 +1,4 @@
+import { textFromDocx } from "@/lib/parse-docx";
 import { clientKey } from "@/lib/job-sources";
 import { enforceDailyCap } from "@/lib/rate-limit";
 import { extractText, getDocumentProxy } from "unpdf";
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Choose a PDF or text resume." }, { status: 400 });
+    return NextResponse.json({ error: "Choose a PDF, DOCX, or text resume." }, { status: 400 });
   }
   if (file.size > 4_000_000) {
     return NextResponse.json({ error: "Keep the file under 4 MB." }, { status: 400 });
@@ -23,8 +24,13 @@ export async function POST(request: Request) {
   if (name.endsWith(".txt")) {
     return NextResponse.json({ text: await file.text(), filename: file.name });
   }
+  if (name.endsWith(".docx")) {
+    const text = await textFromDocx(Buffer.from(await file.arrayBuffer()));
+    if (!text) return NextResponse.json({ error: "No text found in that Word file. Paste the text instead." }, { status: 422 });
+    return NextResponse.json({ text, filename: file.name });
+  }
   if (!name.endsWith(".pdf")) {
-    return NextResponse.json({ error: "Upload a PDF or a .txt file. DOCX parsing is not included." }, { status: 400 });
+    return NextResponse.json({ error: "Upload a PDF, a DOCX, or a .txt file." }, { status: 400 });
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
   const pdf = await getDocumentProxy(bytes);

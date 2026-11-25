@@ -86,10 +86,11 @@ export async function POST(request: Request) {
     const match = cookie.match(/(?:^|;\s*)ja_gmail_refresh=([^;]+)/);
     let refresh = match ? decodeURIComponent(match[1]) : "";
     if (!refresh) {
+      const { userFromAuthHeader } = await import("@/lib/supabase/server");
+      const auth = await userFromAuthHeader(request);
       const admin = supabaseAdmin();
-      const userId = request.headers.get("x-user-id");
-      if (admin && userId && userId !== "demo") {
-        const { data } = await admin.from("gmail_tokens").select("refresh_token").eq("user_id", userId).maybeSingle();
+      if (admin && auth?.user.id) {
+        const { data } = await admin.from("gmail_tokens").select("refresh_token").eq("user_id", auth.user.id).maybeSingle();
         refresh = data?.refresh_token ?? "";
       }
     }

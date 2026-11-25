@@ -13,7 +13,7 @@ const links = [
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="border-b border-line">
+    <header className="bar sticky top-0 z-20 border-b border-line">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
         <Link href="/" className="font-display text-2xl tracking-tight">Job-agent</Link>
         <nav className="hidden items-center gap-6 text-sm md:flex">

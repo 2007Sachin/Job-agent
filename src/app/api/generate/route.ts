@@ -1,7 +1,8 @@
 import { clientKey } from "@/lib/job-sources";
-import { complete, llmConfigured } from "@/lib/llm";
+import { apiModel, complete, llmConfigured } from "@/lib/llm";
 import { enforceDailyCap } from "@/lib/rate-limit";
 import { templateCover, templateEmail, templateLinkedIn, templateResume } from "@/lib/templates";
+import { noteUsage } from "@/lib/usage-log";
 import type { Job, Profile } from "@/lib/types";
 import { NextResponse } from "next/server";
 
@@ -18,11 +19,14 @@ export async function POST(request: Request) {
     profile?: Profile;
     job?: Job;
     userId?: string;
+    model?: string;
+    temperature?: number;
   };
   if (!body.kind || !body.profile || !body.job) {
     return NextResponse.json({ error: "Missing profile, job, or kind." }, { status: 400 });
   }
-  const limit = enforceDailyCap(`llm:${body.userId || clientKey(request)}`);
+  const limit = enforceDailyCap(`llm:${clientKey(request)}`);
+  void noteUsage(request, "generate");
   if (!limit.ok) {
     return NextResponse.json(
       { error: `Daily generation cap (${limit.limit}) reached. Raise LLM_DAILY_CAP or wait until tomorrow.` },
@@ -39,7 +43,14 @@ export async function POST(request: Request) {
   };
 
   if (!llmConfigured()) {
-    return NextResponse.json({ ...fallback(), note: "No LLM key configured. This draft is a local template." });
+    if (body.kind === "resume") {
+      return NextResponse.json({
+        text: "",
+        source: "none",
+        note: "No free model key is configured. Paste a draft. Job-agent will not write a biography for you.",
+      });
+    }
+    return NextResponse.json({ ...fallback(), note: "No free model key is configured. This draft is a local template from your profile." });
   }
 
   try {
@@ -51,11 +62,17 @@ export async function POST(request: Request) {
         ? "Return a subject line on the first line starting with 'Subject: ' and then the email body."
         : "Return only the document text.",
     ].join("\n\n");
-    const text = await complete(prompt, SYSTEM);
+    const text = await complete(prompt, SYSTEM, {
+      model: apiModel(body.model),
+      temperature: typeof body.temperature === "number" ? body.temperature : undefined,
+    });
     const subject = text.startsWith("Subject:") ? text.split("\n")[0].replace(/^Subject:\s*/, "") : undefined;
     return NextResponse.json({ text, subject, source: "llm", remaining: limit.remaining });
   } catch (error) {
     const message = error instanceof Error ? error.message : "LLM error";
-    return NextResponse.json({ ...fallback(), note: `LLM failed (${message}). Showing a template instead.` });
+    if (body.kind === "resume") {
+      return NextResponse.json({ error: message }, { status: 502 });
+    }
+    return NextResponse.json({ ...fallback(), note: `The model failed (${message}). Showing a template from your profile instead.` });
   }
 }

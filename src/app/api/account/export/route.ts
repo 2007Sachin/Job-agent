@@ -11,7 +11,7 @@ export async function GET(request: Request) {
       { status: 401 },
     );
   }
-  const tables = ["profiles", "applications", "outreach", "usage_daily"] as const;
+  const tables = ["profiles", "applications", "outreach", "usage_daily", "bots", "skills", "conversations", "messages", "desk_records"] as const;
   const dump: Record<string, unknown> = { user: { id: auth.user.id, email: auth.user.email } };
   for (const table of tables) {
     const { data, error } = await auth.client.from(table).select("*").eq(table === "profiles" ? "id" : "user_id", auth.user.id);

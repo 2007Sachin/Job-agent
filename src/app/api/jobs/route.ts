@@ -1,4 +1,5 @@
-import { CATALOG, filterCatalog } from "@/lib/catalog";
+import { filterCatalog } from "@/lib/catalog";
+import { searchKeyWarning } from "@/lib/search-warning";
 import type { Job } from "@/lib/types";
 import { NextResponse } from "next/server";
 
@@ -154,11 +155,19 @@ export async function GET(request: Request) {
   });
   const demo = filterCatalog(q, location);
   const jobs = [...filteredLive, ...demo].slice(0, 40);
-  if (!process.env.ADZUNA_APP_ID) warnings.push("Adzuna is off until ADZUNA_APP_ID and ADZUNA_APP_KEY are set.");
-  if (!process.env.GREENHOUSE_BOARDS) warnings.push("Greenhouse boards are off until GREENHOUSE_BOARDS is set.");
-  if (!process.env.LEVER_COMPANIES) warnings.push("Lever companies are off until LEVER_COMPANIES is set.");
+  const seeker = searchKeyWarning({
+    adzuna: process.env.ADZUNA_APP_ID,
+    greenhouse: process.env.GREENHOUSE_BOARDS,
+    lever: process.env.LEVER_COMPANIES,
+  });
+  if (seeker) {
+    warnings.push(seeker);
+    if (!process.env.ADZUNA_APP_ID) console.info("Find jobs: ADZUNA_APP_ID and ADZUNA_APP_KEY are unset.");
+    if (!process.env.GREENHOUSE_BOARDS) console.info("Find jobs: GREENHOUSE_BOARDS is unset.");
+    if (!process.env.LEVER_COMPANIES) console.info("Find jobs: LEVER_COMPANIES is unset.");
+  }
   return NextResponse.json({
-    jobs: jobs.length ? jobs : CATALOG,
+    jobs,
     warnings,
     sources: ["Demo catalog", "Remotive", "Adzuna", "Greenhouse", "Lever"],
   });

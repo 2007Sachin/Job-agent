@@ -1,5 +1,6 @@
 "use client";
 
+import { funnelCounts } from "@/lib/funnel";
 import { useStore } from "@/lib/store";
 import { STAGES } from "@/lib/types";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -16,6 +17,7 @@ export default function AnalyticsPage() {
     byWeek.set(key, (byWeek.get(key) ?? 0) + (app.stage === "saved" ? 0 : 1));
   }
   const weekData = [...byWeek.entries()].map(([week, count]) => ({ week, count }));
+  const steps = funnelCounts(applications);
   const funnel = STAGES.map((stage) => ({
     stage,
     count: applications.filter((a) => a.stage === stage).length,
@@ -33,9 +35,18 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-5xl">Analytics</h1>
+        <h1 className="text-4xl">How you are doing</h1>
         <p className="mt-2 max-w-[62ch] text-muted">Counts come from the tracker on this device. Email open and reply are what you mark. There is no tracking pixel.</p>
       </div>
+      <ol className="grid gap-3 sm:grid-cols-4">
+        {steps.map((step) => (
+          <li key={step.id} className="card p-4">
+            <p className="text-sm text-muted">{step.label}</p>
+            <p className="text-3xl font-semibold">{step.count}</p>
+          </li>
+        ))}
+      </ol>
+      {!applications.length && <p role="status">No saved jobs yet. Find a job, then the funnel starts at Saved.</p>}
       <dl className="grid gap-6 sm:grid-cols-3">
         <div>
           <dt className="text-sm text-muted">Response rate</dt>
