@@ -46,7 +46,7 @@ function ExtensionPair() {
     const res = await fetch("/api/extension/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: saved, title: "Staff Nurse", company: "City Hospital", location: "Pune", description: "Ward shifts", url: "http://127.0.0.1:3000/fixture/job" }),
+      body: JSON.stringify({ token: saved, title: "Extension test save", company: "Not a real employer", location: "Nowhere", description: "This is a test of the save button. It is not a job we found.", url: "http://127.0.0.1:3000/fixture/job" }),
     });
     const json = await res.json();
     setNote(res.ok ? `Test save worked: ${json.job.title}. Open Find jobs and press Check extension saves.` : (json.error || "Test failed"));

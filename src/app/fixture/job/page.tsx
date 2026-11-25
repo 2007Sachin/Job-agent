@@ -24,11 +24,11 @@ export default function FixtureJobPage() {
   }
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
-      <p>This is a local stand-in for a job page. Nothing is read until you click Save.</p>
-      <h1 data-job-title className="mt-4 text-4xl">Staff Nurse</h1>
-      <p data-job-company className="mt-2 font-semibold">City Hospital</p>
-      <p data-job-location>Pune</p>
-      <p data-job-description className="mt-4">Ward shifts, patient notes, and family updates. Weekday mornings.</p>
+      <p>This page is only a test of the save button. It is not a job listing and not a company we found.</p>
+      <h1 data-job-title className="mt-4 text-4xl">Extension test page</h1>
+      <p data-job-company className="mt-2 font-semibold">Not a real employer</p>
+      <p data-job-location>Nowhere</p>
+      <p data-job-description className="mt-4">Test text for the extension. Do not treat this as a found posting.</p>
       <button type="button" className="btn mt-6 bg-brass" onClick={() => void save()}>Save to Job-agent</button>
       {note && <p className="mt-3" role="status">{note}</p>}
     </main>

@@ -3,6 +3,7 @@
 import { CATALOG } from "@/lib/catalog";
 import { downloadDocx, downloadPdfViaPrint } from "@/lib/export-doc";
 import { scoreMatch } from "@/lib/match";
+import { sourceLabel } from "@/lib/source-label";
 import { useStore } from "@/lib/store";
 import type { Job } from "@/lib/types";
 import Link from "next/link";
@@ -128,7 +129,7 @@ export default function JobDetailPage() {
   return (
     <article className="space-y-6">
       <header className="card p-5">
-        <p className="text-sm text-muted">{job.source} · {job.postedAt}</p>
+        <p className="text-sm text-muted">{sourceLabel(job.source)} · {job.postedAt}</p>
         <h1 className="mt-1 text-5xl">{job.title}</h1>
         <p className="mt-2 text-muted">{job.company} · {job.location}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>
         <div className="mt-4 max-w-[62ch]">

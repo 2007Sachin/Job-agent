@@ -327,7 +327,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInDemo = useCallback((email?: string) => {
-    const addr = email?.trim() || "demo@jobagent.local";
+    const addr = email?.trim() || "";
     setState((s) => ({
       ...scopeToUser(s, { id: "demo", email: addr, mode: "demo" }),
       syncNote: "Demo mode keeps data in this browser only.",

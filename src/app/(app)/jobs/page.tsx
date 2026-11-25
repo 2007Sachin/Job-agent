@@ -4,6 +4,7 @@ import { BoardSearchPanel } from "@/components/board-search";
 import { ScreenState } from "@/components/screen-state";
 import { Kip } from "@/components/kip";
 import { scoreMatch } from "@/lib/match";
+import { sourceLabel } from "@/lib/source-label";
 import { useStore } from "@/lib/store";
 import type { Job } from "@/lib/types";
 import Link from "next/link";
@@ -124,7 +125,7 @@ function JobsBody() {
               <div className="avatar" aria-hidden>{letters}</div>
               <div>
                 <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="text-lg font-semibold underline">{job.title}</Link>
-                <p className="text-sm text-muted">{job.company} · {job.location} · {job.source}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>
+                <p className="text-sm text-muted">{job.company} · {job.location} · {sourceLabel(job.source)}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>
                 <p className="mt-1 text-sm">{match.reasons[0]}</p>
               </div>
               <svg width="44" height="44" viewBox="0 0 44 44" aria-label={`${match.score} match`}>
