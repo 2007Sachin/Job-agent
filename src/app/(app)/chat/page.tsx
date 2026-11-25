@@ -3,6 +3,7 @@
 import { HelperDrawer } from "@/components/helper-drawer";
 import { DiamondFace, HelperMark } from "@/components/helper-mark";
 import { SidePanel } from "@/components/side-panel";
+import { modelLabel } from "@/lib/model-label";
 import { botHint, plainBot } from "@/lib/plain";
 import { useStore } from "@/lib/store";
 import type { ToolCard } from "@/lib/workspace";
@@ -30,6 +31,7 @@ function ChatBody() {
   }, [params]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [chatError, setChatError] = useState("");
   const [live, setLive] = useState<{ content: string; tools: ToolCard[] } | null>(null);
   const [attachment, setAttachment] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
@@ -85,8 +87,10 @@ function ChatBody() {
     });
     if (!res.ok || !res.body) {
       setBusy(false);
+      setChatError("The helper could not answer. Check the connection and send again.");
       return;
     }
+    setChatError("");
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -151,7 +155,7 @@ function ChatBody() {
               <span aria-hidden>✦</span>
               <select className="border-0 bg-transparent p-0" value={bot?.model || ""} onChange={(e) => bot && store.saveBot({ ...bot, model: e.target.value })} aria-label="Model">
                 {["env:LLM_MODEL", "Groq", "Gemini", "NVIDIA", bot?.model].filter((v, i, all) => v && all.indexOf(v) === i).map((model) => (
-                  <option key={model} value={model}>{model}</option>
+                  <option key={model} value={model}>{modelLabel(model || "")}</option>
                 ))}
               </select>
             </label>
@@ -205,7 +209,8 @@ function ChatBody() {
               ))}
             </article>
           )}
-          {busy && <p className="text-sm text-muted">Drafting…</p>}
+          {busy && <p className="text-sm text-muted" role="status">Drafting…</p>}
+          {chatError && <p className="text-sm text-danger" role="alert">{chatError}</p>}
         </div>
         <form onSubmit={send} className="px-6 pb-6">
           {attachmentName && <p className="mb-2 text-xs text-muted">Attached {attachmentName}</p>}

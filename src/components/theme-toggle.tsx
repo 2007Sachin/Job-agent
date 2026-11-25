@@ -16,9 +16,8 @@ export function ThemeToggle() {
     setDark(next === "dark");
   }
   return (
-    <button type="button" onClick={toggle} className="inline-flex items-center gap-2 text-sm text-muted" aria-label="Toggle color theme">
+    <button type="button" onClick={toggle} className="inline-flex items-center text-sm text-muted" aria-label={dark ? "Use light mode" : "Use dark mode"}>
       {dark ? <Sun size={16} aria-hidden /> : <Moon size={16} aria-hidden />}
-      <span className="hidden sm:inline">{dark ? "Light" : "Dark"}</span>
     </button>
   );
 }
