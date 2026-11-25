@@ -1,0 +1,20 @@
+# Gap analysis
+
+Sellable job-application product for any role. Checked against the original surfaces (site, login, onboarding, resume, LinkedIn note, cold email, dashboard, analytics, multi-bot chat, rooms, skills, connectors) and the stubs already named on PR #2. Status starts at open. Each fix updates this file.
+
+| # | Gap | Impact | Sev | Effort | Fix plan | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Applications and outreach stay in the browser after Supabase sign-in. The tables exist in `0001_init.sql` and are never written. | A second device or a cleared browser loses the tracker and the emails. | P0 | M | Upsert both tables on change and hydrate them on sign-in. | open |
+| 2 | No GitHub Actions workflow. Lint, test, and build run only on a laptop. | A bad commit can merge with nothing catching it. | P0 | S | Add a workflow that runs lint, test, and build. | open |
+| 3 | Resume upload rejects DOCX. Many resumes are Word files. | Onboarding stops for a common file. | P0 | S | Parse DOCX to text on the existing upload route. | open |
+| 4 | A helper’s model and temperature are stored and ignored. Every draft uses `LLM_MODEL` and temperature 0.4. | The bot settings screen lies. | P1 | S | Pass temperature always, and pass the model only when it is a real model id (labels like “Groq” stay on the default). | open |
+| 5 | `usage_daily` is never incremented. The daily cap lives in process memory and resets on every deploy. | Caps do not survive a restart, and the table the migration created is unused. | P1 | M | When the service role and a signed-in user are present, add 1 to today’s row. Memory remains the fallback. | open |
+| 6 | Follow-up dates are saved on outreach and no longer shown. Home was simplified to three actions and dropped the list. | People miss the date they set. | P1 | S | List due follow-ups on My applications. Do not change the nav. | open |
+| 7 | Routines do not run while the tab is closed. | A saved 9:00 routine never fires. | P1 | M | Add `POST /api/cron/routines` guarded by `CRON_SECRET`, plus a Vercel cron entry. It reads due rows from Supabase and writes an activity row. It does not send email or apply. | open |
+| 8 | Marketing pages have no sitemap or robots file, and titles are generic. | Search engines get a thin site. | P2 | S | Add `sitemap.ts`, `robots.ts`, and a clearer title template. | open |
+| 9 | Nothing is billed. Pricing is a placeholder on purpose. | Cannot charge. | P2 | L | Leave open. Needs a payment account the owner controls. Do not invent a checkout. | open |
+| 10 | Resume files are not uploaded to the Storage bucket the migration creates. Only extracted text is kept. | The original file cannot be downloaded later. | P2 | M | Leave open for this pass. Needs a live Supabase project to verify the bucket policy. Text parsing still works. | open |
+| 11 | Connectors for LinkedIn, Naukri, and similar sites are links and paste boxes. | They are not a live search. | P2 | — | Leave open. Scraping and stored site passwords are out of bounds. | open |
+| 12 | Email open and reply counts are whatever the person marks. | Analytics can overstate replies. | P3 | — | Leave open. No tracking pixel. | open |
+
+Owner still has to supply: Supabase project (URL, anon key, service role), Auth redirect URLs, a free LLM key if they want model drafts, Gmail or SMTP for send, `CRON_SECRET` on Vercel, and a payment provider if billing should exist. Demo mode needs none of these.
