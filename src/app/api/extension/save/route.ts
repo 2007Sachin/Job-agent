@@ -5,6 +5,8 @@ import { enforceDailyCap } from "@/lib/rate-limit";
 import type { Job } from "@/lib/types";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export const dynamic = "force-dynamic";
 
 function clean(value: unknown, max: number) {

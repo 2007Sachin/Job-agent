@@ -2,6 +2,8 @@ import { adminDb } from "@/lib/firebase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function GET(request: Request) {
   const origin = new URL(request.url).origin;
   const url = new URL(request.url);

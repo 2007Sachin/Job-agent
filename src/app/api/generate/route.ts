@@ -6,6 +6,8 @@ import { noteUsage } from "@/lib/usage-log";
 import type { Job, Profile } from "@/lib/types";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export const dynamic = "force-dynamic";
 
 const SYSTEM = `You help a job seeker in India prepare application materials.
