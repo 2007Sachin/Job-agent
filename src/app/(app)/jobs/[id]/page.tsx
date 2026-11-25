@@ -143,7 +143,7 @@ export default function JobDetailPage() {
           <button type="button" className="bg-brass" onClick={() => { store.saveJob(job); setNote("Saved. Open My applications to see it."); }}>
             {application ? "Saved" : "Save this job"}
           </button>
-          <Link href="/chat?helper=bot-scout" className="border border-line px-3 py-2 text-sm">Ask Helper</Link>
+          <Link href={`/chat?job=${encodeURIComponent(job.id)}`} className="border border-line px-3 py-2 text-sm">Ask about this job</Link>
           {job.url && (
             <a className="border border-line px-3 py-2 text-sm" href={job.url} target="_blank" rel="noreferrer">Open apply link</a>
           )}

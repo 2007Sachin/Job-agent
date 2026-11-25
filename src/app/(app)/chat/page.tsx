@@ -1,5 +1,6 @@
 "use client";
 
+import { JobChat } from "@/components/job-chat";
 import { ScreenState } from "@/components/screen-state";
 import { HelperDrawer } from "@/components/helper-drawer";
 import { DiamondFace, HelperMark } from "@/components/helper-mark";
@@ -50,6 +51,10 @@ function ChatBody() {
   const conversationId = useMemo(() => store.conversations.find((c) => c.botId === botId)?.id, [store.conversations, botId]);
   const messages = store.messages.filter((m) => m.conversationId === conversationId);
   const bot = store.bots.find((b) => b.id === botId) ?? store.bots[0];
+  const jobThread = params.get("job");
+  if (jobThread && !advanced) {
+    return <JobChat jobId={jobThread} />;
+  }
 
   async function onFile(file: File) {
     if (file.name.endsWith(".txt")) {
