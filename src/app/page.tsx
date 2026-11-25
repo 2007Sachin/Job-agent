@@ -14,10 +14,10 @@ export default function HomePage() {
           <Link href="/signup" className="btn bg-brass">Try it</Link>
           <Link href="/features" className="btn border border-line">See how it works</Link>
         </div>
-        <ol className="mt-12 space-y-4">
-          <li><strong>1. Add your resume.</strong> A file or a sample is fine.</li>
-          <li><strong>2. Say what jobs you want.</strong> Any kind of work.</li>
-          <li><strong>3. Save one job.</strong> Then make a resume for that job.</li>
+        <ol className="mt-12 space-y-3">
+          <li className="card px-4 py-3"><strong>1. Add your resume.</strong> A file or a sample is fine.</li>
+          <li className="card px-4 py-3"><strong>2. Say what jobs you want.</strong> Any kind of work.</li>
+          <li className="card px-4 py-3"><strong>3. Save one job.</strong> Then make a resume for that job.</li>
         </ol>
       </main>
       <SiteFooter />

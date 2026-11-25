@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Source_Sans_3 } from "next/font/google";
+import { Inter } from "next/font/google";
 import { StoreProvider } from "@/lib/store";
 import "./globals.css";
 
-const sans = Source_Sans_3({ subsets: ["latin"], variable: "--font-source" });
+const sans = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Job-agent",

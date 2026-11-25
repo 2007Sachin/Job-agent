@@ -1,5 +1,6 @@
 "use client";
 
+import { Kip } from "@/components/kip";
 import { scoreMatch } from "@/lib/match";
 import { useStore } from "@/lib/store";
 import type { Job } from "@/lib/types";
@@ -69,18 +70,31 @@ export default function JobsPage() {
         <ul className="text-sm text-muted">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
       )}
       {error && <p className="text-sm text-danger">{error}</p>}
-      {!rows.length && <p>No jobs yet. Press Find jobs, or paste a job description below.</p>}
-      <ul className="divide-y divide-line border-y border-line">
+      {!rows.length && (
+        <div className="card flex items-center gap-4 p-5">
+          <Kip className="h-16 w-16" />
+          <p>No jobs yet. Press Find jobs, or paste a job description below.</p>
+        </div>
+      )}
+      <ul className="space-y-3">
         {rows.map((job) => {
           const match = scoreMatch(profile, job);
           const saved = applications.some((a) => a.job.id === job.id);
+          const letters = job.company.split(/\s+/).slice(0, 2).map((w) => w[0] || "").join("").toUpperCase();
+          const ring = 2 * Math.PI * 16;
           return (
-            <li key={job.id} className="grid gap-2 py-4 md:grid-cols-[1fr_auto] md:items-center">
+            <li key={job.id} className="card grid gap-3 p-4 md:grid-cols-[auto_1fr_auto_auto] md:items-center">
+              <div className="avatar" aria-hidden>{letters}</div>
               <div>
-                <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="text-lg underline">{job.title}</Link>
+                <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="text-lg font-semibold underline">{job.title}</Link>
                 <p className="text-sm text-muted">{job.company} · {job.location} · {job.source}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>
-                <p className="mt-1 text-sm">{match.score} — {match.reasons[0]}</p>
+                <p className="mt-1 text-sm">{match.reasons[0]}</p>
               </div>
+              <svg width="44" height="44" viewBox="0 0 44 44" aria-label={`${match.score} match`}>
+                <circle cx="22" cy="22" r="16" fill="none" stroke="var(--line)" strokeWidth="4" />
+                <circle cx="22" cy="22" r="16" fill="none" stroke="var(--brass)" strokeWidth="4" strokeDasharray={ring} strokeDashoffset={ring * (1 - match.score / 100)} transform="rotate(-90 22 22)" />
+                <text x="22" y="26" textAnchor="middle" fontSize="11" fill="currentColor">{match.score}</text>
+              </svg>
               <button type="button" className="border border-line px-3 py-2 text-sm" onClick={() => saveJob(job)} disabled={saved}>
                 {saved ? "Saved" : "Save"}
               </button>
@@ -88,7 +102,7 @@ export default function JobsPage() {
           );
         })}
       </ul>
-      <form onSubmit={ingest} className="space-y-3 border border-line p-4">
+      <form onSubmit={ingest} className="card space-y-3 p-4">
         <h2 className="text-3xl">Add a posting you already have</h2>
         <p className="text-sm text-muted">Greenhouse and Lever URLs can be read from their public APIs. Anything else needs the description pasted. LinkedIn URLs are refused.</p>
         <input value={paste.url} onChange={(e) => setPaste({ ...paste, url: e.target.value })} placeholder="Job URL (optional)" className="w-full border border-line bg-card px-3 py-2" />

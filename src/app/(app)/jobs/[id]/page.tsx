@@ -116,8 +116,8 @@ export default function JobDetailPage() {
   const relatedMail = store.outreach.filter((o) => (application && o.applicationId === application.id) || (!o.applicationId && o.subject.includes(job.title)));
 
   return (
-    <article className="space-y-10">
-      <header>
+    <article className="space-y-6">
+      <header className="card p-5">
         <p className="text-sm text-muted">{job.source} · {job.postedAt}</p>
         <h1 className="mt-1 text-5xl">{job.title}</h1>
         <p className="mt-2 text-muted">{job.company} · {job.location}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>

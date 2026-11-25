@@ -1,5 +1,6 @@
 "use client";
 
+import { Kip } from "@/components/kip";
 import { PageHeader } from "@/components/page-header";
 import { useStore } from "@/lib/store";
 import { STAGES, type Stage } from "@/lib/types";
@@ -18,19 +19,24 @@ export default function TrackerPage() {
   return (
     <div>
       <PageHeader title="My applications" lede="Move a card when the job changes. You still apply on the company site." action={<Link href="/jobs" className="btn bg-brass">Find jobs</Link>} />
-      {!applications.length && <p className="mb-4">Nothing saved yet. Press Find jobs, open one, and press Save this job.</p>}
+      {!applications.length && (
+        <div className="card mb-4 flex items-center gap-4 p-5">
+          <Kip className="h-16 w-16" />
+          <p>Nothing saved yet. Press Find jobs, open one, and press Save this job.</p>
+        </div>
+      )}
       <div className="mt-6 flex gap-3 overflow-x-auto pb-4">
         {STAGES.map((stage) => (
           <section
             key={stage}
-            className="min-w-[160px] flex-1 border border-line p-3"
+            className="card min-w-[160px] flex-1 p-3"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               const id = e.dataTransfer.getData("text/plain");
               if (id) setStage(id, stage);
             }}
           >
-            <h2 className="text-xl">{labels[stage]}</h2>
+            <h2 className="text-xl"><span className="chip">{labels[stage]}</span></h2>
             <ul className="mt-3 space-y-3">
               {applications.filter((a) => a.stage === stage).map((a) => (
                 <li key={a.id} draggable onDragStart={(e) => e.dataTransfer.setData("text/plain", a.id)} className="cursor-grab bg-card p-3">

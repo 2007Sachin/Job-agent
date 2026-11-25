@@ -102,7 +102,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="card max-w-2xl space-y-6 p-6">
       <p>Step {step + 1} of {steps.length}</p>
       <div className="h-2 bg-line" aria-hidden>
         <div className="h-2 bg-brass" style={{ width: `${((step + 1) / steps.length) * 100}%` }} />

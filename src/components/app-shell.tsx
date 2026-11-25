@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
-      <aside className="border-b border-line bg-paper md:border-b-0 md:border-r">
+      <aside className="bar border-b border-line md:border-b-0 md:border-r">
         <div className="flex items-center justify-between px-4 py-4 md:block">
           <Link href="/jobs" className="text-xl font-semibold">Job-agent</Link>
           <div className="md:mt-3"><ThemeToggle /></div>
