@@ -33,8 +33,13 @@ export function CommandPalette() {
       }
       if (e.key === "Escape") setOpen(false);
     }
+    function onSearch() { setOpen(true); }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("jobagent-search", onSearch);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("jobagent-search", onSearch);
+    };
   }, []);
   const hits = useMemo(() => {
     const query = q.trim().toLowerCase();

@@ -1,15 +1,33 @@
 "use client";
 
-import { Kip } from "@/components/kip";
+import { HelperDrawer } from "@/components/helper-drawer";
+import { HelperMark } from "@/components/helper-mark";
+import { SidePanel } from "@/components/side-panel";
 import { botHint, plainBot } from "@/lib/plain";
 import { useStore } from "@/lib/store";
 import type { ToolCard } from "@/lib/workspace";
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={<p className="p-6">Loading chat…</p>}>
+      <ChatBody />
+    </Suspense>
+  );
+}
+
+function ChatBody() {
   const store = useStore();
-  const [botId, setBotId] = useState(store.bots[0]?.id ?? "bot-scout");
+  const params = useSearchParams();
+  const [botId, setBotId] = useState(params.get("helper") || store.bots[0]?.id || "bot-scout");
+  const [drawer, setDrawer] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [panel, setPanel] = useState(true);
+  useEffect(() => {
+    const next = params.get("helper");
+    if (next) setBotId(next);
+  }, [params]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState<{ content: string; tools: ToolCard[] } | null>(null);
@@ -117,42 +135,36 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="-mx-5 -my-8 grid min-h-[calc(100vh-1px)] md:grid-cols-[240px_1fr]">
-      <aside className="border-b border-line md:border-b-0 md:border-r">
-        <p className="px-4 py-4 font-semibold">Helpers</p>
-        <ul className="mt-2">
-          {store.bots.map((b) => (
-            <li key={b.id}>
-              <button type="button" onClick={() => setBotId(b.id)} className={`w-full px-4 py-2 text-left ${b.id === bot?.id ? "bg-ink text-paper" : ""}`}>
-                <span className="block">{plainBot(b.name)}</span>
-                <span className="block text-sm">{botHint(b.name)} You can still type @{b.name}.</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-4 px-4 font-semibold">Group chats</p>
-        <ul className="mt-1 px-4 text-sm">
-          {store.rooms.map((room) => (
-            <li key={room.id}><Link href={`/rooms/${room.id}`} className="underline">{room.name}</Link></li>
-          ))}
-          <li className="mt-1"><Link href="/rooms" className="underline">Start a group chat</Link></li>
-        </ul>
-        <p className="mt-4 px-4 text-xs text-muted">Conversations</p>
-        <ul className="mt-2 px-4 pb-4 text-sm text-muted">
-          {store.conversations.map((c) => (
-            <li key={c.id} className="py-1">{c.title}</li>
-          ))}
-          {!store.conversations.length && <li>No chats yet. Type a message to start.</li>}
-        </ul>
-      </aside>
+    <div className="grid min-h-screen md:grid-cols-[1fr_300px]">
       <section className="flex min-h-[70vh] flex-col">
+        <header className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
+          <HelperMark name={plainBot(bot?.name || "Helper")} />
+          <div className="min-w-0">
+            <p className="font-semibold">{plainBot(bot?.name || "Helper")}</p>
+            <p className="text-sm text-muted">{bot?.role}</p>
+          </div>
+          <label className="text-sm">Model
+            <select className="ml-2 border border-line bg-card px-2 py-1" value={bot?.model || ""} onChange={(e) => bot && store.saveBot({ ...bot, model: e.target.value })}>
+              {["env:LLM_MODEL", "Groq", "Gemini", "NVIDIA", bot?.model].filter((v, i, all) => v && all.indexOf(v) === i).map((model) => (
+                <option key={model} value={model}>{model}</option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className="border border-line px-3 py-2" onClick={() => setPanel((v) => !v)}>{panel ? "Hide helper screen" : "Helper screen"}</button>
+          <button type="button" className="border border-line px-3 py-2" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>•••</button>
+          {menu && (
+            <div className="flex gap-2">
+              <button type="button" className="underline" onClick={() => { setDrawer(true); setMenu(false); }}>Helper profile</button>
+              <button type="button" className="underline" onClick={() => setBotId(store.bots[0]?.id || botId)}>First helper</button>
+            </div>
+          )}
+        </header>
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-6">
-          {!messages.length && (
+          {!messages.length && bot && (
             <div className="max-w-md">
-              <Kip mood="idle" className="h-20 w-20" />
-              <h1 className="mt-3 text-4xl">Ask the {plainBot(bot?.name || "helper").toLowerCase()}</h1>
-              <p className="mt-2">{bot ? botHint(bot.name) : ""}</p>
-              <p className="mt-2 text-muted">{bot?.role} Mention another bot with @ to hand off.</p>
+              <HelperMark name={plainBot(bot.name)} />
+              <h1 className="mt-3 text-4xl">{plainBot(bot.name)}</h1>
+              <p className="mt-2">{botHint(bot.name)}</p>
             </div>
           )}
           {messages.map((m) => (
@@ -188,12 +200,7 @@ export default function ChatPage() {
               ))}
             </article>
           )}
-          {busy && (
-            <div className="flex items-center gap-2 text-sm text-muted">
-              <Kip mood="thinking" className="h-8 w-8" />
-              Thinking
-            </div>
-          )}
+          {busy && <p className="text-sm text-muted">Drafting…</p>}
         </div>
         <form onSubmit={send} className="border-t border-line p-4">
           {attachmentName && <p className="mb-2 text-xs text-muted">Attached {attachmentName}</p>}
@@ -207,6 +214,8 @@ export default function ChatPage() {
           </div>
         </form>
       </section>
+      {panel && bot && <SidePanel bot={bot} />}
+      {drawer && bot && <HelperDrawer bot={bot} onClose={() => setDrawer(false)} />}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { isRevoked, pushSavedJob } from "@/lib/extension-inbox";
+import { rememberJob, remoteRevoked } from "@/lib/extension-remote";
 import { extensionSecret, readExtensionToken } from "@/lib/extension-token";
 import { enforceDailyCap } from "@/lib/rate-limit";
 import type { Job } from "@/lib/types";
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
   const secret = extensionSecret();
   const token = body.token || "";
   const session = readExtensionToken(token, secret);
-  if (!session || isRevoked(token)) {
+  if (!session || isRevoked(token) || await remoteRevoked(token)) {
     return NextResponse.json({ error: "That pairing token is not valid. Make a new one in Settings." }, { status: 401 });
   }
   const limit = enforceDailyCap(`ext:${session.sub}`);
@@ -46,5 +47,6 @@ export async function POST(request: Request) {
     postedAt: new Date().toISOString().slice(0, 10),
   };
   pushSavedJob(session.sub, job);
+  await rememberJob(session.sub, job);
   return NextResponse.json({ job });
 }

@@ -1,3 +1,4 @@
+import { rememberToken } from "@/lib/extension-remote";
 import { extensionSecret, signExtensionToken } from "@/lib/extension-token";
 import { userFromAuthHeader } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -11,5 +12,7 @@ export async function POST(request: Request) {
   }
   const session = await userFromAuthHeader(request);
   const subject = session?.user.id ?? "demo";
-  return NextResponse.json({ token: signExtensionToken(subject, secret), subject });
+  const token = signExtensionToken(subject, secret);
+  await rememberToken(token, subject);
+  return NextResponse.json({ token, subject });
 }
