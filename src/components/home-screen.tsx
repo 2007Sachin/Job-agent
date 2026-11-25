@@ -28,6 +28,7 @@ export function HomeScreen({
       <div>
         <h1 className="text-[20px] font-semibold">Find a job</h1>
         <p className="mt-1 text-[13px] text-[var(--muted)]">Search, save it, make a resume, then follow up.</p>
+        <p className="mt-1 text-[13px] text-[var(--muted)]">You still apply on the company site. Job-agent does not sign in to job boards or submit applications.</p>
       </div>
       <form action="/jobs" className="flex flex-col gap-2 sm:flex-row">
         <input name="q" value={role} onChange={(e) => onRole(e.target.value)} placeholder="Role" className="w-full bg-white" />
