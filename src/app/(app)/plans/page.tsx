@@ -1,6 +1,6 @@
 "use client";
 
-export default function PricingPage() {
+export default function PlansPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-4xl">Plans</h1>

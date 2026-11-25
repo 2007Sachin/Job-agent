@@ -96,7 +96,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <Tool href="/jobs" icon={Search} label="Find jobs" />
             <Tool href="/tracker" icon={Inbox} label="My applications" />
             <Tool href="/analytics" icon={Workflow} label="How you are doing" />
-            <Tool href="/pricing" icon={Share2} label="Plans" />
+            <Tool href="/plans" icon={Share2} label="Plans" />
           </Section>
         </nav>
         <div className="flex items-center gap-2 px-3 py-3">
