@@ -1,6 +1,8 @@
 import { adminDb } from "@/lib/firebase/server";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 const demo: string[] = [];
 
 export async function POST(request: Request) {

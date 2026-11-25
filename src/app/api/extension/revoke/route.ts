@@ -2,6 +2,8 @@ import { revokeToken } from "@/lib/extension-inbox";
 import { rememberRevoke } from "@/lib/extension-remote";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {

@@ -1,6 +1,8 @@
 import { adminDb, userFromAuthHeader } from "@/lib/firebase/server";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export const dynamic = "force-dynamic";
 
 const collections = ["applications", "outreach", "usage", "bots", "skills", "conversations", "messages", "desk", "apps"] as const;

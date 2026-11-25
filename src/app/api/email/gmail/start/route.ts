@@ -1,6 +1,8 @@
 import { userFromAuthHeader } from "@/lib/firebase/server";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function GET(request: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const origin = new URL(request.url).origin;

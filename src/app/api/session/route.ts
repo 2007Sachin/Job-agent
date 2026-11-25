@@ -1,6 +1,8 @@
 import { userFromAuthHeader } from "@/lib/firebase/server";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   const auth = await userFromAuthHeader(request);
   if (!auth) return NextResponse.json({ error: "Sign in required." }, { status: 401 });

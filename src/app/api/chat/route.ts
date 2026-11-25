@@ -11,6 +11,8 @@ import { noteUsage } from "@/lib/usage-log";
 import type { BotDef, SkillDef } from "@/lib/workspace";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export const dynamic = "force-dynamic";
 
 type Body = {
