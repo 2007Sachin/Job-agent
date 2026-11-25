@@ -7,8 +7,20 @@ export function llmConfigured(): boolean {
   return Boolean(process.env.LLM_API_KEY && process.env.LLM_BASE_URL && process.env.LLM_MODEL);
 }
 
-export async function complete(user: string, system: string): Promise<string> {
+/** Provider nicknames such as "Groq" are not model ids. */
+export function apiModel(label?: string): string | undefined {
+  if (!label) return undefined;
+  if (label.includes("/") || /^(gpt-|gemini-|llama|claude-|meta-)/i.test(label)) return label;
+  return undefined;
+}
+
+export async function complete(
+  user: string,
+  system: string,
+  options?: { model?: string; temperature?: number },
+): Promise<string> {
   const base = process.env.LLM_BASE_URL!.replace(/\/$/, "");
+  const temperature = options?.temperature ?? 0.4;
   const response = await fetch(`${base}/chat/completions`, {
     method: "POST",
     headers: {
@@ -16,8 +28,8 @@ export async function complete(user: string, system: string): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.LLM_MODEL,
-      temperature: 0.4,
+      model: options?.model || process.env.LLM_MODEL,
+      temperature,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },

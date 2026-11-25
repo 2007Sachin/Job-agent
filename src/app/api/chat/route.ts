@@ -1,4 +1,5 @@
 import { planTurn } from "@/lib/chat-plan";
+import { apiModel, complete, llmConfigured } from "@/lib/llm";
 import { filterCatalog } from "@/lib/catalog";
 import { connectors } from "@/lib/connectors";
 import { clientKey } from "@/lib/job-sources";
@@ -83,7 +84,18 @@ export async function POST(request: Request) {
       const send = (event: string, data: unknown) => {
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
-      const chunks = plan.preface.split(/(\s+)/);
+      let preface = plan.preface;
+      if (llmConfigured()) {
+        try {
+          preface = await complete(body.text!, body.bot!.systemPrompt, {
+            model: apiModel(body.bot!.model),
+            temperature: body.bot!.temperature,
+          });
+        } catch {
+          preface = plan.preface;
+        }
+      }
+      const chunks = preface.split(/(\s+)/);
       for (const chunk of chunks) {
         send("token", { text: chunk });
       }

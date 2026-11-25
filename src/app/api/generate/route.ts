@@ -1,5 +1,5 @@
 import { clientKey } from "@/lib/job-sources";
-import { complete, llmConfigured } from "@/lib/llm";
+import { apiModel, complete, llmConfigured } from "@/lib/llm";
 import { enforceDailyCap } from "@/lib/rate-limit";
 import { templateCover, templateEmail, templateLinkedIn, templateResume } from "@/lib/templates";
 import type { Job, Profile } from "@/lib/types";
@@ -18,6 +18,8 @@ export async function POST(request: Request) {
     profile?: Profile;
     job?: Job;
     userId?: string;
+    model?: string;
+    temperature?: number;
   };
   if (!body.kind || !body.profile || !body.job) {
     return NextResponse.json({ error: "Missing profile, job, or kind." }, { status: 400 });
@@ -51,7 +53,10 @@ export async function POST(request: Request) {
         ? "Return a subject line on the first line starting with 'Subject: ' and then the email body."
         : "Return only the document text.",
     ].join("\n\n");
-    const text = await complete(prompt, SYSTEM);
+    const text = await complete(prompt, SYSTEM, {
+      model: apiModel(body.model),
+      temperature: typeof body.temperature === "number" ? body.temperature : undefined,
+    });
     const subject = text.startsWith("Subject:") ? text.split("\n")[0].replace(/^Subject:\s*/, "") : undefined;
     return NextResponse.json({ text, subject, source: "llm", remaining: limit.remaining });
   } catch (error) {
