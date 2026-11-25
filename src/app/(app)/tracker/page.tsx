@@ -2,6 +2,7 @@
 
 import { ScreenState } from "@/components/screen-state";
 import { PageHeader } from "@/components/page-header";
+import { formatFollowUpDate, followUpTiming } from "@/lib/follow-up";
 import { useStore } from "@/lib/store";
 import { STAGES, type Stage } from "@/lib/types";
 import Link from "next/link";
@@ -15,9 +16,8 @@ const labels: Record<Stage, string> = {
 };
 
 export default function TrackerPage() {
-  const { applications, setStage, outreach } = useStore();
-  const today = new Date().toISOString().slice(0, 10);
-  const due = outreach.filter((o) => o.followUpOn && o.followUpOn <= today && o.status !== "replied");
+  const { applications, setStage, outreach, patchOutreach } = useStore();
+  const due = outreach.filter((o) => o.followUpOn && o.status !== "replied");
   return (
     <div>
       <PageHeader title="My applications" lede="Move a card when the job changes. You still apply on the company site." action={<Link href="/jobs" className="btn bg-brass">Find jobs</Link>} />
@@ -26,9 +26,19 @@ export default function TrackerPage() {
         <section className="card mb-4 p-4">
           <h2 className="text-xl">Follow-ups due</h2>
           <ul className="mt-2 space-y-1">
-            {due.map((o) => (
-              <li key={o.id}>{o.followUpOn}: {o.to || "No address yet"} — {o.subject || "No subject"}</li>
-            ))}
+            {due.map((o) => {
+              const app = applications.find((row) => row.id === o.applicationId);
+              const href = app ? `/jobs/${encodeURIComponent(app.job.id)}` : "/follow-ups";
+              const timing = o.followUpOn ? followUpTiming(o.followUpOn) : "";
+              return (
+                <li key={o.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <Link className="underline" href={href}>{o.subject || app?.job.title || "No subject"}</Link>
+                  <span className="text-sm text-muted">{o.followUpOn ? formatFollowUpDate(o.followUpOn) : ""}{timing ? ` · ${timing}` : ""}</span>
+                  <button type="button" className="text-sm underline" onClick={() => patchOutreach(o.id, { followUpOn: null })}>Mark done</button>
+                  <Link className="text-sm underline" href={href}>Open job</Link>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

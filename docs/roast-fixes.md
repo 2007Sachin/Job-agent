@@ -26,3 +26,11 @@ Verdict was go, on the condition that the product is the job loop.
 | Extension had no download | Settings links to job-agent-extension.zip and the Chrome load-unpacked steps for the unzipped folder. Terms stay. Nothing is marked connected. |
 | Ask Helper opened the desk | With Advanced off, Ask about this job is one thread about that job. No desk, drawer, model picker, or new helper. |
 | Home did not say who applies | Under the lede: you still apply on the company site. Job-agent does not sign in to job boards or submit applications. |
+
+## Round 2
+
+| Point | Fix |
+| --- | --- |
+| Find jobs named search keys | The page says some public job lists are off until this site's search keys are set. The key names stay in the server log and in Advanced settings. |
+| Applications banner was a raw date | Follow-ups due uses the same date, Overdue or Due today, Mark done, and Open job as Home. |
+| Old test save could show up | The Staff Nurse / Ward shifts fixture and `/fixture/job` saves are dropped from a normal session. They show only when `NEXT_PUBLIC_SHOW_TEST_FIXTURE` is 1. |

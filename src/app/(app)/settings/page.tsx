@@ -1,6 +1,7 @@
 "use client";
 
 import { ADVANCED_KEY, readAdvanced } from "@/lib/advanced";
+import { showTestFixtures } from "@/lib/test-fixture";
 import { useStore } from "@/lib/store";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
 import { emptyProfile } from "@/lib/types";
@@ -19,6 +20,7 @@ function AdvancedToggle() {
         Show advanced tools
       </label>
       <p className="text-[13px] text-[var(--muted)]">Drafts use a free AI model when your AI key is set in the server environment.</p>
+      <p className="text-[13px] text-[var(--muted)]">Search keys stay on the server: ADZUNA_APP_ID, ADZUNA_APP_KEY, GREENHOUSE_BOARDS, and LEVER_COMPANIES. Find jobs does not show those names.</p>
     </section>
   );
 }
@@ -65,7 +67,7 @@ function ExtensionPair() {
       </ol>
       <div className="flex flex-wrap gap-2">
         <button type="button" className="bg-brass" onClick={() => void pair()}>Make a pairing token</button>
-        <button type="button" className="border border-line" onClick={() => void testSave()}>Test a save</button>
+        {showTestFixtures() && <button type="button" className="border border-line" onClick={() => void testSave()}>Test a save</button>}
         <button type="button" className="border border-line" onClick={() => void revoke()}>Revoke token</button>
       </div>
       {token && <p className="break-all text-sm">{token}</p>}

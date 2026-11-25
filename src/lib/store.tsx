@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { applicationFromRow, applicationRow, outreachFromRow, outreachRow } from "./remote-rows";
+import { isHiddenTestFixture } from "./test-fixture";
 import { getBrowserSupabase } from "./supabase/browser";
 import {
   emptyProfile,
@@ -165,6 +166,8 @@ function load(): AppState {
       ...initial,
       ...parsed,
       profile: { ...emptyProfile(), ...parsed.profile },
+      applications: (parsed.applications ?? []).filter((row) => !isHiddenTestFixture(row.job)),
+      feed: (parsed.feed ?? []).filter((row) => !isHiddenTestFixture(row)),
       bots: parsed.bots?.length ? mergeBots(parsed.bots) : BUILTIN_BOTS,
       rooms: parsed.rooms ?? [],
       roomMessages: parsed.roomMessages ?? [],

@@ -1,6 +1,7 @@
 "use client";
 
 import { boardSearchLinks, type BoardSearch } from "@/lib/board-search";
+import { isHiddenTestFixture } from "@/lib/test-fixture";
 import type { Job } from "@/lib/types";
 import { useEffect, useState } from "react";
 
@@ -33,7 +34,7 @@ export function BoardSearchPanel({ keywords, location, onSaved }: { keywords: st
     const res = await fetch("/api/extension/inbox", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
     const json = await res.json();
     if (!res.ok) { setNote(json.error || "Could not check saves."); return; }
-    const jobs = (json.jobs || []) as Job[];
+    const jobs = ((json.jobs || []) as Job[]).filter((job) => !isHiddenTestFixture(job));
     jobs.forEach(onSaved);
     setNote(jobs.length ? `Added ${jobs.length} job${jobs.length === 1 ? "" : "s"} from the page you saved.` : "No new saves yet. Click Save to Job-agent on a job page.");
   }
