@@ -37,11 +37,11 @@ export default function TrackerPage() {
           <ScreenState kind="empty" title="No applications yet" detail="Find a job, open it, and press Save this job." />
         </div>
       )}
-      <div className="mt-6 flex gap-3 overflow-x-auto pb-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         {STAGES.map((stage) => (
           <section
             key={stage}
-            className="card min-w-[160px] flex-1 p-3"
+            className="card min-w-0 p-3"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               const id = e.dataTransfer.getData("text/plain");
