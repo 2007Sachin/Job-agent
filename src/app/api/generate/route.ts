@@ -1,4 +1,5 @@
 import { consumeAiCall } from "@/lib/ai-quota";
+import { BUSY_MESSAGE } from "@/lib/llm-gate";
 import { apiModel, complete, llmConfigured } from "@/lib/llm";
 import { templateCover, templateEmail, templateLinkedIn, templateResume } from "@/lib/templates";
 import { noteUsage } from "@/lib/usage-log";
@@ -63,11 +64,15 @@ export async function POST(request: Request) {
     const text = await complete(prompt, SYSTEM, {
       model: apiModel(body.model),
       temperature: typeof body.temperature === "number" ? body.temperature : undefined,
+      userId: limit.userId,
     });
     const subject = text.startsWith("Subject:") ? text.split("\n")[0].replace(/^Subject:\s*/, "") : undefined;
     return NextResponse.json({ text, subject, source: "llm", remaining: limit.remaining, limit: limit.limit });
   } catch (error) {
     const message = error instanceof Error ? error.message : "LLM error";
+    if (message === BUSY_MESSAGE) {
+      return NextResponse.json({ error: BUSY_MESSAGE }, { status: 503 });
+    }
     if (body.kind === "resume") {
       return NextResponse.json({ error: message }, { status: 502 });
     }

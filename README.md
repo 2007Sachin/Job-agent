@@ -62,6 +62,8 @@ Google sign-in uses a popup, so you do not add an Auth redirect URL. Add this si
 
 Set `LLM_BASE_URL`, `LLM_API_KEY`, and `LLM_MODEL` to a free OpenAI-compatible endpoint (Gemini, Groq, or NVIDIA NIM). Without them, drafts use local templates. `LLM_DAILY_CAP` defaults to 25 generations per key per UTC day on that instance.
 
+NVIDIA NIM: `LLM_BASE_URL=https://integrate.api.nvidia.com/v1` and `LLM_MODEL=mistralai/mistral-large-4-1t-a52b`. Another option is `nvidia/nemotron-3.5-lightning-30b-a3b`. `meta/llama-3.3-70b-instruct` is end of life. The free tier is about 40 requests per minute. `LLM_GLOBAL_RPM` defaults to 35 and is shared across server instances in Firestore (`llmBudget`), or in memory when Firebase admin is not configured. If the minute is full, the request waits up to `LLM_QUEUE_TIMEOUT_MS` (15 seconds) and then returns 503: “Busy right now, try again in a moment.” The same sentence is shown in the app. Upstream 429 responses honor `retry-after` inside that wait. Identical prompts are cached in `llmCache` for `LLM_CACHE_TTL_HOURS` (24). The cache key includes the user id, so one person's draft is not served to another. A prompt marked shareable (public text only) can be cached without a user id. Optional `LLM_FALLBACK_BASE_URL`, `LLM_FALLBACK_API_KEY`, and `LLM_FALLBACK_MODEL` are used when the primary provider is throttled or errors. Reasoning models that return an empty `content` use `reasoning_content` instead, and requests set `max_tokens` to 2048.
+
 ### Deploy (Vercel + Firebase)
 
 - Import the repo in Vercel. Framework preset: Next.js.
