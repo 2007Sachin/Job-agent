@@ -28,7 +28,7 @@ Job-agent helps people in India apply for work in any function or seniority. It 
 ## What is stubbed or limited
 
 - Pricing is a placeholder. Nothing is billed.
-- In-memory daily caps reset per server instance. The `usage_daily` table is in the migration but the API does not increment it yet.
+- AI routes (`/api/chat` and `/api/generate`) allow `AI_DAILY_LIMIT_PER_USER` actions per UTC day (default 20). Signed-in counts are an atomic Firestore increment on `users/{uid}/usage/ai-YYYY-MM-DD`. Clients may read that document and cannot write it. Demo mode, with no Firebase admin credentials, uses an in-memory counter. A request with no Firebase user and no extension token is rejected when Firebase admin is configured. Over the cap the API returns 429.
 - Gmail refresh tokens are stored in an httpOnly cookie and, when the service role is set, in `gmail_tokens`. There is no background worker.
 - A signed-in session writes the profile, applications, outreach, and workspace documents to Firestore. The export API reads those documents with the admin SDK.
 - Resume upload parses PDF and `.txt`. It does not parse DOCX. The resume text is saved on the profile. Files are not uploaded (no Firebase Storage).

@@ -1,10 +1,9 @@
 import { planTurn } from "@/lib/chat-plan";
+import { consumeAiCall } from "@/lib/ai-quota";
 import { apiModel, complete, llmConfigured } from "@/lib/llm";
 import { filterCatalog } from "@/lib/catalog";
 import { connectors } from "@/lib/connectors";
-import { clientKey } from "@/lib/job-sources";
 import { scoreMatch } from "@/lib/match";
-import { enforceDailyCap } from "@/lib/rate-limit";
 import { templateCover, templateEmail, templateLinkedIn, templateResume } from "@/lib/templates";
 import type { Job, Profile } from "@/lib/types";
 import { noteUsage } from "@/lib/usage-log";
@@ -72,9 +71,9 @@ function syntheticJob(query: string, attachment: string): Job {
 }
 
 export async function POST(request: Request) {
-  const limit = enforceDailyCap(`chat:${clientKey(request)}`);
+  const limit = await consumeAiCall(request);
   void noteUsage(request, "chat");
-  if (!limit.ok) return NextResponse.json({ error: "Daily chat cap reached." }, { status: 429 });
+  if (!limit.ok) return NextResponse.json({ error: limit.error, remaining: limit.remaining, limit: limit.limit }, { status: limit.status });
   const body = (await request.json()) as Body;
   if (!body.text || !body.bot || !body.profile) {
     return NextResponse.json({ error: "Missing message." }, { status: 400 });
@@ -116,6 +115,11 @@ export async function POST(request: Request) {
     },
   });
   return new Response(stream, {
-    headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "X-AI-Remaining": String(limit.remaining),
+      "X-AI-Limit": String(limit.limit),
+    },
   });
 }

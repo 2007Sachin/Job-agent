@@ -4,6 +4,7 @@ import { CommandPalette } from "./command-palette";
 import { ThemeToggle } from "./theme-toggle";
 import { Toasts } from "./toast";
 import { HelperMark } from "./helper-mark";
+import { aiAuthHeaders } from "@/lib/ai-auth";
 import { readAdvanced } from "@/lib/advanced";
 import { liveStatus } from "@/lib/helper-desk";
 import { plainBot, roleTag } from "@/lib/plain";
@@ -32,7 +33,24 @@ function Shell({ children }: { children: React.ReactNode }) {
   const [openTools, setOpenTools] = useState(true);
   const [nav, setNav] = useState(false);
   const [advanced, setAdvanced] = useState(false);
+  const [quota, setQuota] = useState<{ remaining: number; limit: number } | null>(null);
   useEffect(() => { setAdvanced(readAdvanced()); }, [pathname]);
+  useEffect(() => {
+    let stop = false;
+    async function load() {
+      const res = await fetch("/api/ai-quota", { headers: await aiAuthHeaders() });
+      if (!res.ok || stop) return;
+      const json = await res.json();
+      if (typeof json.remaining === "number") setQuota({ remaining: json.remaining, limit: json.limit });
+    }
+    void load();
+    const onQuota = (event: Event) => {
+      const detail = (event as CustomEvent<{ remaining?: number; limit?: number }>).detail;
+      if (typeof detail?.remaining === "number") setQuota({ remaining: detail.remaining, limit: detail.limit || quota?.limit || 20 });
+    };
+    window.addEventListener("jobagent-quota", onQuota);
+    return () => { stop = true; window.removeEventListener("jobagent-quota", onQuota); };
+  }, [pathname, quota?.limit]);
   const helper = params.get("helper");
 
   useEffect(() => {
@@ -118,6 +136,13 @@ function Shell({ children }: { children: React.ReactNode }) {
           <Link href="/settings" aria-label="Settings"><Settings size={16} /></Link>
           <button type="button" aria-label="Sign out" onClick={() => void signOut().then(() => router.push("/"))}><LogOut size={16} /></button>
         </div>
+        {quota && (
+          <p className="px-3 pb-3 text-[12px] text-[var(--faint)]" role="status">
+            {quota.remaining === 0
+              ? `You've used today's ${quota.limit} AI actions; resets tomorrow.`
+              : `${quota.remaining} AI actions left today`}
+          </p>
+        )}
       </aside>
       <div className="min-w-0 bg-[var(--paper)]">
         <div className={wide ? "h-full" : "mx-auto max-w-3xl px-4 py-6 md:px-6"}>{children}</div>

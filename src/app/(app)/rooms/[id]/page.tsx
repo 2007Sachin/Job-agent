@@ -1,5 +1,6 @@
 "use client";
 
+import { aiAuthHeaders } from "@/lib/ai-auth";
 import { routeRoom } from "@/lib/chat-plan";
 import { useStore } from "@/lib/store";
 import { useParams } from "next/navigation";
@@ -31,7 +32,7 @@ export default function RoomPage() {
       if (!bot) continue;
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await aiAuthHeaders()) },
         body: JSON.stringify({
           text: memories ? `${prompt}\n\nRemember:\n${memories}` : prompt,
           bot,
