@@ -6,12 +6,13 @@ import { ScreenState } from "@/components/screen-state";
 import { HelperDrawer } from "@/components/helper-drawer";
 import { DiamondFace, HelperMark } from "@/components/helper-mark";
 import { SidePanel } from "@/components/side-panel";
-import { readAdvanced } from "@/lib/advanced";
 import { DEFAULT_MODEL, modelLabel } from "@/lib/model-label";
 import { botHint, plainBot } from "@/lib/plain";
 import { useStore } from "@/lib/store";
 import type { ToolCard } from "@/lib/workspace";
-import { useSearchParams } from "next/navigation";
+import type { Job } from "@/lib/types";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
 export default function ChatPage() {
@@ -28,17 +29,16 @@ function ChatBody() {
   const [botId, setBotId] = useState(params.get("helper") || store.bots[0]?.id || "bot-scout");
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [advanced, setAdvanced] = useState(false);
+  const advanced = true;
   const [panel, setPanel] = useState(false);
-  useEffect(() => { setAdvanced(readAdvanced()); }, []);
+  const router = useRouter();
   useEffect(() => {
-    if (!advanced) return;
     const mq = window.matchMedia("(max-width: 767px)");
     const apply = () => setPanel(!mq.matches);
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
-  }, [advanced]);
+  }, []);
   useEffect(() => {
     const next = params.get("helper");
     if (next) setBotId(next);
@@ -53,7 +53,7 @@ function ChatBody() {
   const messages = store.messages.filter((m) => m.conversationId === conversationId);
   const bot = store.bots.find((b) => b.id === botId) ?? store.bots[0];
   const jobThread = params.get("job");
-  if (jobThread && !advanced) {
+  if (jobThread) {
     return <JobChat jobId={jobThread} />;
   }
 
@@ -206,7 +206,7 @@ function ChatBody() {
                 <div key={tool.id} className="mt-3 border border-line bg-card p-3 text-sm">
                   <p className="font-medium">{tool.name}</p>
                   <p className="text-muted">{tool.detail}</p>
-                  <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-sans">{tool.draft}</pre>
+                  {tool.name === "search_jobs" ? <JobHits draft={tool.draft} onSave={(job) => { store.saveJob(job); router.push(`/jobs/${encodeURIComponent(job.id)}`); }} /> : <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-sans">{tool.draft}</pre>}
                   {tool.status === "needs_approval" && (
                     <div className="mt-2 flex gap-2">
                       <button type="button" className="bg-ink px-2 py-1 text-paper" onClick={() => store.patchTool(m.id, tool.id, { status: "approved" })}>Approve</button>
@@ -253,5 +253,30 @@ function ChatBody() {
       {advanced && panel && bot && <SidePanel bot={bot} onClose={() => setPanel(false)} />}
       {advanced && drawer && bot && <HelperDrawer bot={bot} onClose={() => setDrawer(false)} />}
     </div>
+  );
+}
+
+function JobHits({ draft, onSave }: { draft: string; onSave: (job: Job) => void }) {
+  let jobs: Job[] = [];
+  try {
+    const parsed = JSON.parse(draft) as Job[];
+    if (Array.isArray(parsed)) jobs = parsed;
+  } catch {
+    jobs = [];
+  }
+  if (!jobs.length) return <p className="mt-2">No live roles matched that search.</p>;
+  return (
+    <ul className="mt-2 space-y-2">
+      {jobs.map((job) => (
+        <li key={job.id} className="border border-line p-2">
+          <p className="font-semibold">{job.title}</p>
+          <p className="text-muted">{job.company} · {job.location} · {job.source}</p>
+          <div className="mt-2 flex gap-2">
+            <button type="button" className="border border-line px-2 py-1" onClick={() => onSave(job)}>Save</button>
+            <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="border border-line px-2 py-1" onClick={() => onSave(job)}>Tailor</Link>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }

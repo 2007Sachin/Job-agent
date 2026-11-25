@@ -2,7 +2,8 @@ import { planTurn } from "@/lib/chat-plan";
 import { consumeAiCall } from "@/lib/ai-quota";
 import { BUSY_MESSAGE } from "@/lib/llm-gate";
 import { apiModel, complete, llmConfigured } from "@/lib/llm";
-import { filterCatalog } from "@/lib/catalog";
+import { firebaseAdminConfigured } from "@/lib/firebase/server";
+import { searchJobs, searchQuery } from "@/lib/job-search";
 import { connectors } from "@/lib/connectors";
 import { scoreMatch } from "@/lib/match";
 import { templateCover, templateEmail, templateLinkedIn, templateResume } from "@/lib/templates";
@@ -24,14 +25,19 @@ type Body = {
   attachment?: string;
 };
 
-function toolText(name: string, profile: Profile, query: string, attachment: string): { detail: string; draft: string } {
+async function toolText(name: string, profile: Profile, query: string, attachment: string): Promise<{ detail: string; draft: string }> {
   const job = syntheticJob(query, attachment);
   if (name === "search_jobs") {
-    const hits = filterCatalog(query, profile.locations[0] ?? "").slice(0, 4);
-    const lines = hits.map((h) => `${h.title} · ${h.company} · ${h.location} · ${h.source}`).join("\n");
+    const role = searchQuery(query) || profile.targetRoles.map(searchQuery).filter(Boolean).join(" ");
+    const result = await searchJobs({
+      q: role,
+      location: profile.locations[0] ?? "",
+      demo: !firebaseAdminConfigured(),
+    });
+    const hits = result.jobs.slice(0, 6);
     return {
-      detail: "Catalog matches (live boards are searched from the Jobs page).",
-      draft: lines || "No catalog role matched that search.",
+      detail: result.note || result.warnings.slice(0, 4).join(". "),
+      draft: JSON.stringify(hits),
     };
   }
   if (name === "score_job") {
@@ -108,7 +114,7 @@ export async function POST(request: Request) {
         send("token", { text: chunk });
       }
       for (const tool of plan.tools) {
-        const built = toolText(tool.name, body.profile!, tool.query, body.attachment ?? "");
+        const built = await toolText(tool.name, body.profile!, tool.query, body.attachment ?? "");
         send("tool", {
           name: tool.name,
           needsApproval: tool.needsApproval,

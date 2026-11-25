@@ -5,11 +5,10 @@ import { ThemeToggle } from "./theme-toggle";
 import { Toasts } from "./toast";
 import { HelperMark } from "./helper-mark";
 import { aiAuthHeaders } from "@/lib/ai-auth";
-import { readAdvanced } from "@/lib/advanced";
 import { liveStatus } from "@/lib/helper-desk";
 import { plainBot, roleTag } from "@/lib/plain";
 import { useStore } from "@/lib/store";
-import { Bell, Bookmark, FileText, Home, Inbox, LogOut, Menu, Plus, Search, Settings, Share2, Users, Workflow, X } from "lucide-react";
+import { Bell, Bookmark, FileText, Home, Inbox, LogOut, Menu, MessageCircle, Plus, Search, Settings, Share2, Users, Workflow, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -32,9 +31,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   const [openHelpers, setOpenHelpers] = useState(true);
   const [openTools, setOpenTools] = useState(true);
   const [nav, setNav] = useState(false);
-  const [advanced, setAdvanced] = useState(false);
   const [quota, setQuota] = useState<{ remaining: number; limit: number } | null>(null);
-  useEffect(() => { setAdvanced(readAdvanced()); }, [pathname]);
   useEffect(() => {
     let stop = false;
     async function load() {
@@ -63,7 +60,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   if (!ready || !user) return <p className="p-8 text-sm text-muted">Loading…</p>;
 
-  const wide = advanced && (pathname.startsWith("/chat") || pathname.startsWith("/rooms"));
+  const wide = pathname.startsWith("/chat") || pathname.startsWith("/rooms");
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
@@ -78,11 +75,12 @@ function Shell({ children }: { children: React.ReactNode }) {
           <button type="button" className="flex min-h-9 flex-1 items-center gap-2 rounded-full bg-white px-3 text-left text-[13px] text-muted" onClick={() => window.dispatchEvent(new Event("jobagent-search"))}>
             <Search size={16} strokeWidth={1.75} aria-hidden /> Search
           </button>
-          {advanced && <Link href="/bots" aria-label="New helper" className="flex h-8 w-8 items-center justify-center rounded-full"><Plus size={16} /></Link>}
+          <Link href="/bots" aria-label="New helper" className="flex h-8 w-8 items-center justify-center rounded-full"><Plus size={16} /></Link>
           <button type="button" className="md:hidden" aria-label="Close menu" onClick={() => setNav(false)}><X size={16} /></button>
         </div>
         <nav className="mt-2 flex-1 space-y-1 overflow-y-auto px-2 pb-3 text-[14px]">
           <Tool href="/dashboard" icon={Home} label="Home" />
+          <Tool href="/chat" icon={MessageCircle} label="Chat" />
           <Tool href="/jobs" icon={Search} label="Find jobs" />
           <Tool href="/saved" icon={Bookmark} label="Saved" />
           <Tool href="/tracker" icon={Inbox} label="Applications" />
@@ -90,7 +88,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <Tool href="/follow-ups" icon={Bell} label="Follow-ups" />
           <Tool href="/plans" icon={Share2} label="Plans" />
           <Tool href="/settings" icon={Settings} label="Settings" />
-          {advanced && <>
+          <>
           <Section title="Group chats" open={openGroups} onToggle={() => setOpenGroups((v) => !v)}>
             {rooms.map((room) => (
               <Link key={room.id} href={`/rooms/${room.id}`} className="block rounded-lg px-2 py-1.5 hover:bg-black/5">
@@ -125,7 +123,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <Tool href="/analytics" icon={Workflow} label="How you are doing" />
             <Tool href="/plans" icon={Share2} label="Plans" />
           </Section>
-          </>}
+          </>
         </nav>
         <div className="flex items-center gap-2 px-3 py-3">
           <Link href="/settings" className="flex min-w-0 flex-1 items-center gap-2">

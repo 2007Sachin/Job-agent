@@ -93,14 +93,13 @@ export default function OnboardingPage() {
     patchApplication(app.id, { tailoredResume: draft });
     completeOnboarding({});
     notify("Resume draft is ready. Edit it, then you send it.");
-    router.push(`/jobs/${encodeURIComponent(top.job.id)}`);
+    router.push("/chat");
   }
 
   function skipAll() {
     if (!profile.fullName.trim()) updateProfile({ fullName: "Friend" });
-    if (!profile.targetRoles.length) updateProfile({ targetRoles: ["Any job"] });
     completeOnboarding({});
-    router.push("/jobs");
+    router.push("/chat");
   }
 
   return (
