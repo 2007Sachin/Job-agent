@@ -1,5 +1,6 @@
 import { planTurn } from "@/lib/chat-plan";
 import { consumeAiCall } from "@/lib/ai-quota";
+import { BUSY_MESSAGE } from "@/lib/llm-gate";
 import { apiModel, complete, llmConfigured } from "@/lib/llm";
 import { filterCatalog } from "@/lib/catalog";
 import { connectors } from "@/lib/connectors";
@@ -79,23 +80,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing message." }, { status: 400 });
   }
   const plan = planTurn(body.text, body.bot, body.bots ?? [body.bot], body.skills ?? []);
+  let preface = plan.preface;
+  if (llmConfigured()) {
+    try {
+      preface = await complete(body.text, body.bot.systemPrompt, {
+        model: apiModel(body.bot.model),
+        temperature: body.bot.temperature,
+        userId: limit.userId,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === BUSY_MESSAGE) {
+        return NextResponse.json({ error: BUSY_MESSAGE }, { status: 503 });
+      }
+      preface = plan.preface;
+    }
+  }
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
       const send = (event: string, data: unknown) => {
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
-      let preface = plan.preface;
-      if (llmConfigured()) {
-        try {
-          preface = await complete(body.text!, body.bot!.systemPrompt, {
-            model: apiModel(body.bot!.model),
-            temperature: body.bot!.temperature,
-          });
-        } catch {
-          preface = plan.preface;
-        }
-      }
       const chunks = preface.split(/(\s+)/);
       for (const chunk of chunks) {
         send("token", { text: chunk });

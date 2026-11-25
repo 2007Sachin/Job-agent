@@ -48,6 +48,12 @@ service cloud.firestore {
     match /waitlist/{id} {
       allow read, write: if false;
     }
+    match /llmBudget/{id} {
+      allow read, write: if false;
+    }
+    match /llmCache/{id} {
+      allow read, write: if false;
+    }
     match /users/{userId}/private/{doc} {
       allow read, write: if false;
     }
