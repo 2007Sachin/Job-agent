@@ -21,6 +21,7 @@ export default function TrackerPage() {
   return (
     <div>
       <PageHeader title="My applications" lede="Move a card when the job changes. You still apply on the company site." action={<Link href="/jobs" className="btn bg-brass">Find jobs</Link>} />
+      {due.length === 0 && <p className="mb-4 text-sm text-muted">No follow-ups due. Set a date on a note when you want a reminder.</p>}
       {due.length > 0 && (
         <section className="card mb-4 p-4">
           <h2 className="text-xl">Follow-ups due</h2>
