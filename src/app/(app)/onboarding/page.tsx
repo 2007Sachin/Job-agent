@@ -36,7 +36,7 @@ function TagField({ label, hint, values, onChange, placeholder }: { label: strin
 }
 
 export default function OnboardingPage() {
-  const { profile, updateProfile, completeOnboarding, saveJob } = useStore();
+  const { profile, updateProfile, completeOnboarding, saveJob, patchApplication } = useStore();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
@@ -88,10 +88,12 @@ export default function OnboardingPage() {
       setError("No jobs to save yet. Press Skip and search on the next page.");
       return;
     }
-    saveJob(top.job);
+    const app = saveJob(top.job);
+    const draft = `${profile.fullName || "Your name"}\n${profile.targetRoles.join(", ") || "Role"}\n\nExperience\n${(profile.resumeText || "Add a real job you have done.").slice(0, 600)}`;
+    patchApplication(app.id, { tailoredResume: draft });
     completeOnboarding({});
-    notify("Saved. It is on My applications.");
-    router.push("/tracker");
+    notify("Resume draft is ready. Edit it, then you send it.");
+    router.push(`/jobs/${encodeURIComponent(top.job.id)}`);
   }
 
   function skipAll() {
@@ -148,7 +150,7 @@ export default function OnboardingPage() {
 
       {step === 3 && (
         <div className="space-y-3">
-          <p>Save the closest job. You can make a resume for it on the next screen.</p>
+          <p>Save the closest job and get a first resume draft from the facts you already gave. You still edit it and send it yourself.</p>
           {matches[0] && <p className="font-semibold">{matches[0].job.title} at {matches[0].job.company}</p>}
           <button type="button" className="bg-brass" onClick={saveFirst}>Save this job</button>
         </div>
