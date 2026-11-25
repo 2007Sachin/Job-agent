@@ -74,7 +74,7 @@ export type Outreach = {
 export type SessionUser = {
   id: string;
   email: string;
-  mode: "demo" | "supabase";
+  mode: "demo" | "firebase";
 };
 
 export type AppState = {

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { adminDb } from "@/lib/firebase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -28,12 +28,11 @@ export async function GET(request: Request) {
   if (!token.refresh_token) {
     return NextResponse.redirect(new URL("/settings?gmail=token", origin));
   }
-  const admin = supabaseAdmin();
-  if (admin && userId) {
-    await admin.from("gmail_tokens").upsert({
-      user_id: userId,
-      refresh_token: token.refresh_token,
-      updated_at: new Date().toISOString(),
+  const db = adminDb();
+  if (db && userId) {
+    await db.collection("users").doc(userId).collection("private").doc("gmail").set({
+      refreshToken: token.refresh_token,
+      updatedAt: new Date().toISOString(),
     });
   }
   const response = NextResponse.redirect(new URL("/settings?gmail=connected", origin));

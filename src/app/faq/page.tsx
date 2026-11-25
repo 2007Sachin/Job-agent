@@ -4,7 +4,7 @@ const faqs = [
   ["Which jobs does this cover?", "Any. Target roles are free text. Search is not limited to product, engineering, or campus listings."],
   ["Do you apply on my behalf?", "No. You open the employer link and submit. Drafts stay editable. Email sends only after you approve that message and have recorded consent."],
   ["Will it message recruiters on LinkedIn?", "It writes a note you can copy. It can open LinkedIn. It does not click, connect, or send."],
-  ["Where does my data live?", "In this browser until you connect Supabase. With Supabase, rows are tied to your user and protected with row level security. Settings can export or delete them. That export is there for the Digital Personal Data Protection Act, not as legal advice."],
+  ["Where does my data live?", "In this browser until you connect Firebase. With Firebase, your Firestore documents are readable only by you. Settings can export or delete them. That export is there for the Digital Personal Data Protection Act, not as legal advice."],
   ["Which model?", "Any OpenAI-compatible endpoint you put in environment variables. Gemini, Groq, and NVIDIA NIM are the intended free options. Keys are never written into the repo."],
 ];
 

@@ -11,7 +11,9 @@ import {
 } from "react";
 import { applicationFromRow, applicationRow, outreachFromRow, outreachRow } from "./remote-rows";
 import { isHiddenTestFixture } from "./test-fixture";
-import { getBrowserSupabase } from "./supabase/browser";
+import { clientAuth, clientDb } from "./firebase/browser";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
 import {
   emptyProfile,
   type Application,
@@ -51,34 +53,31 @@ function uid() {
   return crypto.randomUUID();
 }
 
+async function put(path: [string, ...string[]], data: Record<string, unknown>) {
+  const db = clientDb();
+  if (!db) return;
+  await setDoc(doc(db, path[0], path[1], ...path.slice(2)), data, { merge: true });
+}
+
 async function persistWorkspace(s: AppState) {
-  const sb = getBrowserSupabase();
-  if (!sb || s.user?.mode !== "supabase") return;
-  const user_id = s.user.id;
+  if (!clientDb() || s.user?.mode !== "firebase") return;
+  const userId = s.user.id;
   const now = new Date().toISOString();
   for (const bot of s.bots.filter((b) => !b.builtin)) {
-    await sb.from("bots").upsert({ id: bot.id, user_id, payload: bot, updated_at: now });
+    await put(["users", userId, "bots", bot.id], { payload: bot, updatedAt: now });
   }
   for (const skill of s.skills.filter((sk) => !sk.builtin)) {
-    await sb.from("skills").upsert({ id: skill.id, user_id, payload: skill, updated_at: now });
+    await put(["users", userId, "skills", skill.id], { payload: skill, updatedAt: now });
   }
   for (const conversation of s.conversations) {
-    await sb.from("conversations").upsert({
-      id: conversation.id,
-      user_id,
-      bot_id: conversation.botId,
+    await put(["users", userId, "conversations", conversation.id], {
+      botId: conversation.botId,
       title: conversation.title,
-      updated_at: conversation.updatedAt,
+      updatedAt: conversation.updatedAt,
     });
   }
   for (const message of s.messages.slice(-30)) {
-    await sb.from("messages").upsert({
-      id: message.id,
-      user_id,
-      conversation_id: message.conversationId,
-      payload: message,
-      created_at: message.createdAt,
-    });
+    await put(["users", userId, "messages", message.id], { payload: message, createdAt: message.createdAt });
   }
   const desk = [
     ...s.rooms.map((row) => ({ id: row.id, kind: "room", payload: row })),
@@ -89,13 +88,13 @@ async function persistWorkspace(s: AppState) {
     ...s.activity.slice(0, 40).map((row) => ({ id: row.id, kind: "activity", payload: row })),
   ];
   for (const row of desk) {
-    await sb.from("desk_records").upsert({ id: row.id, user_id, kind: row.kind, payload: row.payload, updated_at: now });
+    await put(["users", userId, "desk", row.id], { kind: row.kind, payload: row.payload, updatedAt: now });
   }
   for (const app of s.applications) {
-    await sb.from("applications").upsert(applicationRow(user_id, app));
+    await put(["users", userId, "applications", app.id], applicationRow(userId, app) as Record<string, unknown>);
   }
   for (const item of s.outreach) {
-    await sb.from("outreach").upsert(outreachRow(user_id, item));
+    await put(["users", userId, "outreach", item.id], outreachRow(userId, item) as Record<string, unknown>);
   }
 }
 
@@ -126,7 +125,7 @@ type Store = AppState & {
   ready: boolean;
   signInDemo: (email?: string) => void;
   signOut: () => Promise<void>;
-  adoptSupabaseUser: (id: string, email: string) => void;
+  adoptFirebaseUser: (id: string, email: string) => void;
   updateProfile: (patch: Partial<Profile>) => void;
   completeOnboarding: (patch: Partial<Profile>) => void;
   setFeed: (jobs: Job[]) => void;
@@ -211,121 +210,105 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [state, ready]);
 
   useEffect(() => {
-    const sb = getBrowserSupabase();
-    if (!sb) return;
-    sb.auth.getSession().then(({ data }) => {
-      const u = data.session?.user;
-      if (u) {
-        setState((s) => scopeToUser(s, { id: u.id, email: u.email ?? "", mode: "supabase" }));
-        void pullRemote(u.id);
-      }
+    const auth = clientAuth();
+    if (!auth) return;
+    return onAuthStateChanged(auth, (u) => {
+      if (!u) return;
+      setState((s) => scopeToUser(s, { id: u.uid, email: u.email ?? "", mode: "firebase" }));
+      void pullRemote(u.uid);
+      void u.getIdToken().then((token) => fetch("/api/session", { method: "POST", headers: { Authorization: `Bearer ${token}` } }));
     });
   }, []);
 
+  async function list(userId: string, name: string): Promise<Array<Record<string, unknown> & { id: string }>> {
+    const db = clientDb();
+    if (!db) return [];
+    const snap = await getDocs(collection(db, "users", userId, name));
+    return snap.docs.map((row) => ({ id: row.id, ...(row.data() as Record<string, unknown>) }));
+  }
+
   async function pullRemote(userId: string) {
-    const sb = getBrowserSupabase();
-    if (!sb) return;
-    const [profileRes, botsRes, skillsRes, convRes, msgRes, deskRes, appRes, outRes] = await Promise.all([
-      sb.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      sb.from("bots").select("*").eq("user_id", userId),
-      sb.from("skills").select("*").eq("user_id", userId),
-      sb.from("conversations").select("*").eq("user_id", userId),
-      sb.from("messages").select("*").eq("user_id", userId),
-      sb.from("desk_records").select("*").eq("user_id", userId),
-      sb.from("applications").select("*").eq("user_id", userId),
-      sb.from("outreach").select("*").eq("user_id", userId),
-    ]);
-    if (profileRes.error && botsRes.error) {
-      setState((s) => s.user?.id === userId ? { ...s, syncNote: "Signed in. Profile sync is waiting on the Supabase tables (see the migration)." } : s);
-      return;
+    const db = clientDb();
+    if (!db) return;
+    try {
+      const [profileSnap, bots, skills, conv, msgs, desk, apps, outs] = await Promise.all([
+        getDoc(doc(db, "users", userId)),
+        list(userId, "bots"),
+        list(userId, "skills"),
+        list(userId, "conversations"),
+        list(userId, "messages"),
+        list(userId, "desk"),
+        list(userId, "applications"),
+        list(userId, "outreach"),
+      ]);
+      const data = profileSnap.data();
+      setState((s) => {
+        if (s.user?.id !== userId) return s;
+        const customBots = bots.map((row) => row.payload as BotDef).filter((b) => b && !b.builtin);
+        const customSkills = skills.map((row) => row.payload as SkillDef).filter((sk) => sk && !sk.builtin);
+        const conversations = conv.map((row) => ({
+          id: String(row.id),
+          title: String(row.title || "Chat"),
+          botId: String(row.botId || ""),
+          updatedAt: String(row.updatedAt || new Date().toISOString()),
+        }));
+        const messages = msgs.map((row) => row.payload as ChatMessage).filter(Boolean);
+        const take = <T,>(kind: string) => desk.filter((row) => row.kind === kind).map((row) => row.payload as T);
+        const applications = apps.map((row) => applicationFromRow(row as Record<string, unknown>)).filter((row): row is NonNullable<typeof row> => Boolean(row));
+        const outreach = outs.map((row) => outreachFromRow(row as Record<string, unknown>)).filter((row): row is NonNullable<typeof row> => Boolean(row));
+        return {
+          ...s,
+          syncNote: null,
+          profile: data
+            ? {
+                ...s.profile,
+                fullName: String(data.fullName ?? ""),
+                email: String(data.email ?? s.profile.email),
+                onboarded: Boolean(data.onboarded),
+                targetRoles: (data.targetRoles as string[]) ?? [],
+                locations: (data.locations as string[]) ?? [],
+                salaryMinLpa: (data.salaryMinLpa as number | null) ?? null,
+                salaryMaxLpa: (data.salaryMaxLpa as number | null) ?? null,
+                experienceYears: (data.experienceYears as number | null) ?? null,
+                skills: (data.skills as string[]) ?? [],
+                linkedinUrl: String(data.linkedinUrl ?? ""),
+                preferences: String(data.preferences ?? ""),
+                resumeText: String(data.resumeText ?? ""),
+                resumeFileName: String(data.resumeFileName ?? ""),
+                emailConsent: Boolean(data.emailConsent),
+                consentAt: (data.consentAt as string | null) ?? null,
+                smtpHost: String(data.smtpHost ?? ""),
+                smtpPort: String(data.smtpPort ?? "587"),
+                smtpUser: String(data.smtpUser ?? ""),
+                smtpFrom: String(data.smtpFrom ?? ""),
+              }
+            : s.profile,
+          bots: customBots.length ? [...BUILTIN_BOTS, ...customBots] : s.bots,
+          skills: customSkills.length ? mergeSkills([...BUILTIN_SKILLS, ...customSkills]) : s.skills,
+          conversations: conversations.length ? conversations : s.conversations,
+          messages: messages.length ? messages : s.messages,
+          rooms: desk.length ? take("room") : s.rooms,
+          tasks: desk.length ? take("task") : s.tasks,
+          schedules: desk.length ? take("schedule") : s.schedules,
+          memories: desk.length ? take("memory") : s.memories,
+          library: desk.length ? take("library") : s.library,
+          activity: desk.length ? take("activity") : s.activity,
+          applications: applications.length ? applications : s.applications,
+          outreach: outreach.length ? outreach : s.outreach,
+        };
+      });
+    } catch {
+      setState((s) => s.user?.id === userId ? { ...s, syncNote: "Signed in. Firestore rejected the read. Check the rules." } : s);
     }
-    const data = profileRes.data;
-    setState((s) => {
-      if (s.user?.id !== userId) return s;
-      const customBots = (botsRes.data ?? []).map((row) => row.payload as BotDef).filter((b) => b && !b.builtin);
-      const customSkills = (skillsRes.data ?? []).map((row) => row.payload as SkillDef).filter((sk) => sk && !sk.builtin);
-      const conversations = (convRes.data ?? []).map((row) => ({
-        id: row.id as string,
-        title: (row.title as string) || "Chat",
-        botId: row.bot_id as string,
-        updatedAt: (row.updated_at as string) || new Date().toISOString(),
-      }));
-      const messages = (msgRes.data ?? []).map((row) => row.payload as ChatMessage).filter(Boolean);
-      const desk = deskRes.data ?? [];
-      const take = <T,>(kind: string) => desk.filter((row) => row.kind === kind).map((row) => row.payload as T);
-      const applications = (appRes.data ?? []).map((row) => applicationFromRow(row as Record<string, unknown>)).filter((row): row is NonNullable<typeof row> => Boolean(row));
-      const outreach = (outRes.data ?? []).map((row) => outreachFromRow(row as Record<string, unknown>)).filter((row): row is NonNullable<typeof row> => Boolean(row));
-      return {
-        ...s,
-        syncNote: null,
-        profile: data
-          ? {
-              ...s.profile,
-              fullName: data.full_name ?? "",
-              email: data.email ?? s.profile.email,
-              onboarded: Boolean(data.onboarded),
-              targetRoles: data.target_roles ?? [],
-              locations: data.locations ?? [],
-              salaryMinLpa: data.salary_min_lpa,
-              salaryMaxLpa: data.salary_max_lpa,
-              experienceYears: data.experience_years,
-              skills: data.skills ?? [],
-              linkedinUrl: data.linkedin_url ?? "",
-              preferences: data.preferences ?? "",
-              resumeText: data.resume_text ?? "",
-              resumeFileName: data.resume_file_name ?? "",
-              emailConsent: Boolean(data.email_consent),
-              consentAt: data.consent_at,
-              smtpHost: data.smtp_host ?? "",
-              smtpPort: data.smtp_port ?? "587",
-              smtpUser: data.smtp_user ?? "",
-              smtpFrom: data.smtp_from ?? "",
-            }
-          : s.profile,
-        bots: customBots.length ? [...BUILTIN_BOTS, ...customBots] : s.bots,
-        skills: customSkills.length ? mergeSkills([...BUILTIN_SKILLS, ...customSkills]) : s.skills,
-        conversations: conversations.length ? conversations : s.conversations,
-        messages: messages.length ? messages : s.messages,
-        rooms: desk.length ? take("room") : s.rooms,
-        tasks: desk.length ? take("task") : s.tasks,
-        schedules: desk.length ? take("schedule") : s.schedules,
-        memories: desk.length ? take("memory") : s.memories,
-        library: desk.length ? take("library") : s.library,
-        activity: desk.length ? take("activity") : s.activity,
-        applications: applications.length ? applications : s.applications,
-        outreach: outreach.length ? outreach : s.outreach,
-      };
-    });
   }
 
   const pushProfile = useCallback(async (profile: Profile, userId: string) => {
-    const sb = getBrowserSupabase();
-    if (!sb) return;
-    const { error } = await sb.from("profiles").upsert({
-      id: userId,
-      email: profile.email,
-      full_name: profile.fullName,
-      onboarded: profile.onboarded,
-      target_roles: profile.targetRoles,
-      locations: profile.locations,
-      salary_min_lpa: profile.salaryMinLpa,
-      salary_max_lpa: profile.salaryMaxLpa,
-      experience_years: profile.experienceYears,
-      skills: profile.skills,
-      linkedin_url: profile.linkedinUrl,
-      preferences: profile.preferences,
-      resume_text: profile.resumeText,
-      resume_file_name: profile.resumeFileName,
-      email_consent: profile.emailConsent,
-      consent_at: profile.consentAt,
-      smtp_host: profile.smtpHost,
-      smtp_port: profile.smtpPort,
-      smtp_user: profile.smtpUser,
-      smtp_from: profile.smtpFrom,
-      updated_at: new Date().toISOString(),
-    });
-    if (error) {
-      setState((s) => ({ ...s, syncNote: "Profile saved on this device. Supabase rejected the write." }));
+    const db = clientDb();
+    if (!db) return;
+    try {
+      await setDoc(doc(db, "users", userId), { ...profile, updatedAt: new Date().toISOString() }, { merge: true });
+    } catch {
+      setState((s) => ({ ...s, syncNote: "Profile saved on this device. Firestore rejected the write." }));
     }
   }, []);
 
@@ -338,20 +321,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    const sb = getBrowserSupabase();
-    if (sb) await sb.auth.signOut();
+    const auth = clientAuth();
+    if (auth) await firebaseSignOut(auth);
+    await fetch("/api/session", { method: "DELETE" });
     setState((s) => ({ ...s, user: null }));
   }, []);
 
-  const adoptSupabaseUser = useCallback((id: string, email: string) => {
-    setState((s) => scopeToUser(s, { id, email, mode: "supabase" }));
+  const adoptFirebaseUser = useCallback((id: string, email: string) => {
+    setState((s) => scopeToUser(s, { id, email, mode: "firebase" }));
     void pullRemote(id);
   }, []);
 
   const updateProfile = useCallback((patch: Partial<Profile>) => {
     setState((s) => {
       const profile = { ...s.profile, ...patch };
-      if (s.user?.mode === "supabase") void pushProfile(profile, s.user.id);
+      if (s.user?.mode === "firebase") void pushProfile(profile, s.user.id);
       return { ...s, profile };
     });
   }, [pushProfile]);
@@ -534,7 +518,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       ready,
       signInDemo,
       signOut,
-      adoptSupabaseUser,
+      adoptFirebaseUser,
       updateProfile,
       completeOnboarding,
       setFeed,
@@ -567,7 +551,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       ready,
       signInDemo,
       signOut,
-      adoptSupabaseUser,
+      adoptFirebaseUser,
       updateProfile,
       completeOnboarding,
       setFeed,
