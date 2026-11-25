@@ -15,10 +15,22 @@ const labels: Record<Stage, string> = {
 };
 
 export default function TrackerPage() {
-  const { applications, setStage } = useStore();
+  const { applications, setStage, outreach } = useStore();
+  const today = new Date().toISOString().slice(0, 10);
+  const due = outreach.filter((o) => o.followUpOn && o.followUpOn <= today && o.status !== "replied");
   return (
     <div>
       <PageHeader title="My applications" lede="Move a card when the job changes. You still apply on the company site." action={<Link href="/jobs" className="btn bg-brass">Find jobs</Link>} />
+      {due.length > 0 && (
+        <section className="card mb-4 p-4">
+          <h2 className="text-xl">Follow-ups due</h2>
+          <ul className="mt-2 space-y-1">
+            {due.map((o) => (
+              <li key={o.id}>{o.followUpOn}: {o.to || "No address yet"} — {o.subject || "No subject"}</li>
+            ))}
+          </ul>
+        </section>
+      )}
       {!applications.length && (
         <div className="card mb-4 flex items-center gap-4 p-5">
           <Kip className="h-16 w-16" />
