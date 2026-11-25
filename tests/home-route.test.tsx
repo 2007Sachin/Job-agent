@@ -62,6 +62,8 @@ describe("home route", () => {
       recent: [application],
       due: [due],
       resumes: [application],
+      applications: [application],
+      onDone: () => {},
     }));
     expect(html).toContain("Find a job");
     expect(html).toContain("Staff nurse");

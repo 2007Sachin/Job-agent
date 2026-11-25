@@ -1,3 +1,4 @@
+import { formatFollowUpDate, followUpTiming } from "@/lib/follow-up";
 import type { Application, Outreach } from "@/lib/types";
 import Link from "next/link";
 
@@ -9,6 +10,8 @@ export function HomeScreen({
   recent,
   due,
   resumes,
+  applications,
+  onDone,
 }: {
   role: string;
   location: string;
@@ -17,6 +20,8 @@ export function HomeScreen({
   recent: Application[];
   due: Outreach[];
   resumes: Application[];
+  applications: Application[];
+  onDone: (id: string) => void;
 }) {
   return (
     <div className="space-y-8">
@@ -43,7 +48,19 @@ export function HomeScreen({
         <h2 className="text-[16px] font-medium">Follow-ups due</h2>
         {!due.length && <p className="mt-2 text-[13px] text-[var(--muted)]">None due.</p>}
         <ul className="mt-2 space-y-1">
-          {due.map((item) => <li key={item.id}>{item.followUpOn}: {item.subject || "No subject"}</li>)}
+          {due.map((item) => {
+            const app = applications.find((row) => row.id === item.applicationId);
+            const href = app ? `/jobs/${encodeURIComponent(app.job.id)}` : "/follow-ups";
+            const timing = item.followUpOn ? followUpTiming(item.followUpOn) : "";
+            return (
+              <li key={item.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <Link className="underline" href={href}>{item.subject || "No subject"}</Link>
+                <span className="text-[13px] text-[var(--muted)]">{item.followUpOn ? formatFollowUpDate(item.followUpOn) : ""}{timing ? ` · ${timing}` : ""}</span>
+                <button type="button" className="text-[13px] underline" onClick={() => onDone(item.id)}>Mark done</button>
+                {app && <Link className="text-[13px] underline" href={href}>Open job</Link>}
+              </li>
+            );
+          })}
         </ul>
         <Link href="/follow-ups" className="mt-2 inline-block text-[13px] underline">Open follow-ups</Link>
       </section>

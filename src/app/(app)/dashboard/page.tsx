@@ -5,7 +5,7 @@ import { useStore } from "@/lib/store";
 import { useState } from "react";
 
 export default function HomePage() {
-  const { applications, outreach, profile } = useStore();
+  const { applications, outreach, profile, patchOutreach } = useStore();
   const [role, setRole] = useState(profile.targetRoles[0] || "");
   const [location, setLocation] = useState(profile.locations[0] || "");
   const today = new Date().toISOString().slice(0, 10);
@@ -21,6 +21,8 @@ export default function HomePage() {
       recent={applications.slice(0, 3)}
       due={due}
       resumes={resumes}
+      applications={applications}
+      onDone={(id) => patchOutreach(id, { followUpOn: null })}
     />
   );
 }
