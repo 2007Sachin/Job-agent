@@ -131,7 +131,13 @@ export default function JobDetailPage() {
         <p className="text-sm text-muted">{job.source} · {job.postedAt}</p>
         <h1 className="mt-1 text-5xl">{job.title}</h1>
         <p className="mt-2 text-muted">{job.company} · {job.location}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>
-        <p className="mt-4 max-w-[62ch]">{match.score} match. {match.reasons.join(" ")}</p>
+        <div className="mt-4 max-w-[62ch]">
+          <p className="font-medium">Fit note: {match.score} out of 100</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+            {match.reasons.map((reason) => <li key={reason}>{reason}</li>)}
+          </ul>
+          <p className="mt-2 text-sm text-muted">This is a fit note against your profile, not an ATS score.</p>
+        </div>
         <div className="mt-4 flex flex-wrap gap-3">
           <button type="button" className="bg-brass" onClick={() => { store.saveJob(job); setNote("Saved. Open My applications to see it."); }}>
             {application ? "Saved" : "Save this job"}
