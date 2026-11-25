@@ -43,7 +43,14 @@ export async function POST(request: Request) {
   };
 
   if (!llmConfigured()) {
-    return NextResponse.json({ ...fallback(), note: "No LLM key configured. This draft is a local template." });
+    if (body.kind === "resume") {
+      return NextResponse.json({
+        text: "",
+        source: "none",
+        note: "No free model key is configured. Paste a draft. Job-agent will not write a biography for you.",
+      });
+    }
+    return NextResponse.json({ ...fallback(), note: "No free model key is configured. This draft is a local template from your profile." });
   }
 
   try {
@@ -63,6 +70,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ text, subject, source: "llm", remaining: limit.remaining });
   } catch (error) {
     const message = error instanceof Error ? error.message : "LLM error";
-    return NextResponse.json({ ...fallback(), note: `LLM failed (${message}). Showing a template instead.` });
+    if (body.kind === "resume") {
+      return NextResponse.json({ error: message }, { status: 502 });
+    }
+    return NextResponse.json({ ...fallback(), note: `The model failed (${message}). Showing a template from your profile instead.` });
   }
 }
