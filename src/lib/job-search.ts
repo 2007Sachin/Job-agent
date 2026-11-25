@@ -13,10 +13,31 @@ export type SearchResult = {
 const cache = new Map<string, { at: number; body: unknown }>();
 const CACHE_MS = 15 * 60 * 1000;
 
+const CHAT_FILLER = new Set(["find", "me", "my", "jobs", "job", "in", "a", "an", "the", "for", "please", "search", "looking", "role", "roles", "opening", "openings", "any", "show", "some"]);
+
 export function searchQuery(raw: string) {
   const text = raw.trim();
   if (!text || /^any job$/i.test(text)) return "";
   return text;
+}
+
+/** Chat utterances include instructions and a place. Keep the role words, and the place separately. */
+export function roleFromChat(text: string) {
+  let location = "";
+  const withoutPlace = text.replace(/\b(?:in|near|around)\s+([A-Za-z][A-Za-z .'-]{1,40})$/i, (_, place: string) => {
+    location = place.trim();
+    return "";
+  });
+  const words = withoutPlace
+    .split(/\s+/)
+    .map((word) => word.replace(/[^A-Za-z0-9+-]/g, ""))
+    .filter((word) => word && !CHAT_FILLER.has(word.toLowerCase()));
+  return { q: searchQuery(words.join(" ")), location };
+}
+
+export function salaryLabel(min?: number, max?: number) {
+  if (!min || !max) return undefined;
+  return `${Math.round(min / 100000)}–${Math.round(max / 100000)} LPA`;
 }
 
 export function slugList(raw: string | undefined, fallback: string) {
@@ -49,7 +70,8 @@ export function dedupeJobs(jobs: Job[]) {
   const seen = new Set<string>();
   const out: Job[] = [];
   for (const job of jobs) {
-    const key = `${job.title} ${job.company}`.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const place = /\bremote\b|worldwide|anywhere/i.test(job.location) ? "remote" : job.location.toLowerCase();
+    const key = `${job.title} ${job.company} ${place}`.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(job);
@@ -232,7 +254,7 @@ async function adzuna(query: string, location: string): Promise<Job[]> {
   if (query) url.searchParams.set("what", query);
   if (location) url.searchParams.set("where", location);
   const data = (await cachedJson(url.toString())) as {
-    results?: { id: string; title: string; company: { display_name: string }; location: { display_name: string }; redirect_url: string; description: string; created: string }[];
+    results?: { id: string; title: string; company: { display_name: string }; location: { display_name: string }; redirect_url: string; description: string; created: string; salary_min?: number; salary_max?: number }[];
   };
   return (data.results ?? []).map((job) => ({
     id: `adzuna-${job.id}`,
@@ -242,6 +264,7 @@ async function adzuna(query: string, location: string): Promise<Job[]> {
     source: "Adzuna",
     url: job.redirect_url,
     description: clip(job.description),
+    salaryLabel: salaryLabel(job.salary_min, job.salary_max),
     postedAt: (job.created || "").slice(0, 10),
   }));
 }

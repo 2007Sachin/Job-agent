@@ -1,4 +1,4 @@
-import { dedupeJobs, rankJobs, searchQuery, slugList } from "../src/lib/job-search";
+import { dedupeJobs, rankJobs, roleFromChat, salaryLabel, searchQuery, slugList } from "../src/lib/job-search";
 import type { Job } from "../src/lib/types";
 import { describe, expect, it } from "vitest";
 
@@ -17,6 +17,8 @@ describe("live job search", () => {
     expect(searchQuery("Any job")).toBe("");
     expect(searchQuery("  ")).toBe("");
     expect(searchQuery("nurse")).toBe("nurse");
+    expect(roleFromChat("Find me data analyst jobs in Bengaluru")).toEqual({ q: "data analyst", location: "Bengaluru" });
+    expect(salaryLabel(400000, 600000)).toBe("4–6 LPA");
   });
 
   it("ranks a city match ahead of remote and keeps remote when the city is missing", () => {
@@ -41,7 +43,8 @@ describe("live job search", () => {
       job({ id: "2", title: "Support", company: "Groww", location: "Mumbai" }),
     ];
     expect(rankJobs(rows, "product", "").jobs).toHaveLength(1);
-    expect(dedupeJobs(rows)).toHaveLength(1);
+    expect(dedupeJobs(rows)).toHaveLength(2);
+    expect(dedupeJobs([rows[1], { ...rows[1], id: "3" }])).toHaveLength(1);
     expect(slugList(undefined, "paytm,meesho,cred")).toEqual(["paytm", "meesho", "cred"]);
     expect(slugList("a,b,c,d,e", "paytm")).toHaveLength(5);
   });

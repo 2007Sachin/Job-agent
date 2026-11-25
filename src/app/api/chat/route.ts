@@ -3,7 +3,7 @@ import { consumeAiCall } from "@/lib/ai-quota";
 import { BUSY_MESSAGE } from "@/lib/llm-gate";
 import { apiModel, complete, llmConfigured } from "@/lib/llm";
 import { firebaseAdminConfigured } from "@/lib/firebase/server";
-import { searchJobs, searchQuery } from "@/lib/job-search";
+import { roleFromChat, searchJobs, searchQuery } from "@/lib/job-search";
 import { connectors } from "@/lib/connectors";
 import { scoreMatch } from "@/lib/match";
 import { templateCover, templateEmail, templateLinkedIn, templateResume } from "@/lib/templates";
@@ -28,10 +28,11 @@ type Body = {
 async function toolText(name: string, profile: Profile, query: string, attachment: string): Promise<{ detail: string; draft: string }> {
   const job = syntheticJob(query, attachment);
   if (name === "search_jobs") {
-    const role = searchQuery(query) || profile.targetRoles.map(searchQuery).filter(Boolean).join(" ");
+    const asked = roleFromChat(query);
+    const role = asked.q || profile.targetRoles.map(searchQuery).filter(Boolean).join(" ");
     const result = await searchJobs({
       q: role,
-      location: profile.locations[0] ?? "",
+      location: asked.location || profile.locations[0] || "",
       demo: !firebaseAdminConfigured(),
     });
     const hits = result.jobs.slice(0, 6);
