@@ -8,7 +8,7 @@ import { useStore } from "@/lib/store";
 import type { Job } from "@/lib/types";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 export default function JobsPage() {
   return (
@@ -21,10 +21,14 @@ export default function JobsPage() {
 function JobsBody() {
   const params = useSearchParams();
   const { profile, feed, setFeed, saveJob, applications } = useStore();
-  const [q, setQ] = useState(params.get("q") || profile.targetRoles[0] || "");
-  const [location, setLocation] = useState(params.get("location") || profile.locations[0] || "");
+  const queryFromUrl = params.get("q") || "";
+  const locationFromUrl = params.get("location") || "";
+  const auto = Boolean(queryFromUrl || locationFromUrl);
+  const [q, setQ] = useState(queryFromUrl || profile.targetRoles[0] || "");
+  const [location, setLocation] = useState(locationFromUrl || profile.locations[0] || "");
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(auto);
+  const [searched, setSearched] = useState(false);
   const [error, setError] = useState("");
   const [paste, setPaste] = useState({ url: "", title: "", company: "", description: "" });
 
@@ -42,11 +46,19 @@ function JobsBody() {
       }
       setFeed(json.jobs);
       setWarnings(json.warnings ?? []);
+      setSearched(true);
     } catch {
       setLoading(false);
       setError("Search failed. Check the connection and try again.");
     }
   }
+
+  useEffect(() => {
+    if (!auto) return;
+    void search();
+    // Run once for the query Home sent. Later edits wait for Find jobs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function ingest(e: React.FormEvent) {
     e.preventDefault();
@@ -89,7 +101,13 @@ function JobsBody() {
       )}
       {loading && <ScreenState kind="loading" title="Looking" detail="Searching public lists." />}
       {error && <ScreenState kind="error" title="Search failed" detail={error} onRetry={() => void search()} />}
-      {!rows.length && (
+      {!loading && !error && !rows.length && searched && (
+        <div className="card flex items-center gap-4 p-5">
+          <Kip className="h-16 w-16" />
+          <p>No public listings for {q || "that search"}{location ? ` in ${location}` : ""}. Try other words, or paste a description below.</p>
+        </div>
+      )}
+      {!loading && !error && !rows.length && !searched && (
         <div className="card flex items-center gap-4 p-5">
           <Kip className="h-16 w-16" />
           <p>No jobs yet. Press Find jobs, or paste a job description below.</p>
