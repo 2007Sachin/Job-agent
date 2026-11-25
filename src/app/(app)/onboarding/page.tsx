@@ -120,8 +120,8 @@ export default function OnboardingPage() {
             <input value={profile.fullName} onChange={(e) => updateProfile({ fullName: e.target.value })} className="mt-1 w-full" />
           </label>
           <label className="block">
-            Upload a PDF or text file
-            <input type="file" accept=".pdf,.txt,application/pdf,text/plain" className="mt-1 block w-full" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }} />
+            Upload a PDF, Word, or text file
+            <input type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" className="mt-1 block w-full" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }} />
           </label>
           {parsing && <p>Reading the file…</p>}
           {profile.resumeFileName && <p>Loaded {profile.resumeFileName}</p>}
