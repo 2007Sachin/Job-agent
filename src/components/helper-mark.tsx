@@ -1,4 +1,4 @@
-const hues = ["#e11d48", "#d97706", "#059669", "#2563eb", "#7c3aed", "#0891b2"];
+const hues = ["#c4622d", "#a34b32", "#8c6239", "#d0894c", "#6e5344", "#e0a06a"];
 
 export function hueFor(name: string) {
   const n = name.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0);

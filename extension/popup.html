@@ -1,18 +1,42 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="color-scheme" content="light" />
     <title>Job-agent Save</title>
     <style>
-      body { font: 15px/1.4 -apple-system, sans-serif; margin: 12px; width: 260px; color: #1c1c1e; }
-      input, button { width: 100%; box-sizing: border-box; margin-top: 8px; min-height: 36px; }
-      p { margin: 0 0 8px; }
+      body {
+        font: 15px/1.45 "Source Sans 3", "Segoe UI", sans-serif;
+        margin: 0;
+        width: 280px;
+        color: #2c241e;
+        background:
+          radial-gradient(180px 80px at 0 0, #f0d4be, transparent 70%),
+          #f3ece4;
+        padding: 14px;
+      }
+      p { margin: 0 0 10px; }
+      label { display: block; margin-top: 8px; font-size: 13px; }
+      input, button {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 4px;
+        min-height: 40px;
+        border-radius: 12px;
+        border: 1px solid rgba(44, 36, 30, 0.14);
+        background: rgba(255, 250, 245, 0.9);
+        color: inherit;
+        padding: 8px 10px;
+      }
+      button { margin-top: 12px; font-weight: 700; background: #c4622d; color: #fffaf6; border: 0; }
     </style>
   </head>
   <body>
     <p>Paste the pairing token from Job-agent Settings. This extension reads a page only when you click Save.</p>
-    <input id="token" placeholder="Pairing token" />
-    <input id="origin" placeholder="http://127.0.0.1:3000" />
+    <label for="token">Pairing token</label>
+    <input id="token" name="token" autocomplete="off" placeholder="Pairing token" />
+    <label for="origin">Job-agent site</label>
+    <input id="origin" name="origin" type="url" inputmode="url" autocomplete="url" placeholder="http://127.0.0.1:3000" />
     <button id="save" type="button">Save pairing</button>
     <script src="popup.js"></script>
   </body>
