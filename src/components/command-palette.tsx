@@ -5,18 +5,18 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 const links = [
+  ["/dashboard", "Home"],
   ["/chat", "Chat"],
-  ["/rooms", "Rooms"],
-  ["/tasks", "Tasks"],
-  ["/schedules", "Schedules"],
-  ["/library", "Library"],
-  ["/activity", "Activity"],
-  ["/workspace", "Workspace"],
+  ["/jobs", "Jobs"],
+  ["/tracker", "Applications"],
+  ["/analytics", "Insights"],
   ["/bots", "Bots"],
   ["/skills", "Skills"],
   ["/connectors", "Connectors"],
-  ["/jobs", "Jobs"],
-  ["/tracker", "Tracker"],
+  ["/schedules", "Routines"],
+  ["/workspace", "Memory and usage"],
+  ["/library", "Library"],
+  ["/rooms", "Rooms"],
   ["/settings", "Settings"],
 ];
 
@@ -45,7 +45,7 @@ export function CommandPalette() {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-ink/40 px-4 pt-24" onClick={() => setOpen(false)}>
-      <div className="w-full max-w-lg border border-line bg-card p-3" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Command palette">
+      <div className="glass w-full max-w-lg p-3" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Command palette">
         <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Jump or search chats" className="w-full border border-line bg-paper px-3 py-2" />
         <ul className="mt-2 max-h-80 overflow-auto text-sm">
           {hits.pages.map(([href, label]) => (

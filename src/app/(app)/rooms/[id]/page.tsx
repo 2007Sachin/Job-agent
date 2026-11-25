@@ -33,7 +33,7 @@ export default function RoomPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: `${room!.instructions}\n${memories}\n${prompt}`,
+          text: memories ? `${prompt}\n\nRemember:\n${memories}` : prompt,
           bot,
           bots: store.bots,
           skills: store.skills,

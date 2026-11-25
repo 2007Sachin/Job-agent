@@ -33,7 +33,7 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-5xl">Analytics</h1>
+        <h1 className="text-5xl">Insights</h1>
         <p className="mt-2 max-w-[62ch] text-muted">Counts come from the tracker on this device. Email open and reply are what you mark. There is no tracking pixel.</p>
       </div>
       <dl className="grid gap-6 sm:grid-cols-3">

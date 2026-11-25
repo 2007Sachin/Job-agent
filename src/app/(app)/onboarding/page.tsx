@@ -61,7 +61,7 @@ export default function OnboardingPage() {
       return;
     }
     completeOnboarding({});
-    router.push("/chat");
+    router.push("/dashboard");
   }
 
   return (

@@ -2,7 +2,9 @@
 
 Suggested product name: **Kipdesk**. The mascot is Kip, a river kite drawn for this app. The repository and UI still say Job-agent until the name is chosen.
 
-Chat is the main desk. Starter bots are Job Scout, Resume Tailor, Outreach Writer, Application Coach, and Interview Prep. Mention another bot with `@` to hand off. Skills are markdown instructions plus an allow-list of tools. Connectors are either a public API (Remotive, and Adzuna, Greenhouse, and Lever when configured) or assist-only (LinkedIn, Naukri, Instahyre, Hirist, Cutshort, Wellfound, Indeed, Foundit): a deep link, a paste box, and drafts. Those sites are not scraped, and their passwords are never stored.
+The signed-in desk opens on Home. Primary navigation is Home, Chat, Jobs, Applications, and Insights. Bots, skills, connectors, routines, memory, the library, usage, and settings live under Workspace. Chat lists one-to-one bots and group rooms together. Activity and tasks show on Home. Onboarding lands on Home.
+
+Chat is one desk among those. Starter bots are Job Scout, Resume Tailor, Outreach Writer, Application Coach, and Interview Prep. Mention another bot with `@` to hand off. Skills are markdown instructions plus an allow-list of tools. Connectors are either a public API (Remotive, and Adzuna, Greenhouse, and Lever when configured) or assist-only (LinkedIn, Naukri, Instahyre, Hirist, Cutshort, Wellfound, Indeed, Foundit): a deep link, a paste box, and drafts. Those sites are not scraped, and their passwords are never stored.
 
 Workspace rows for bots, skills, conversations, and messages are in `supabase/migrations/0002_workspace.sql` with row level security. Demo mode keeps them in the browser. The chat route streams a planned reply. With no model key it uses the same local templates as the job desk. Email still sends only after consent and an explicit send on the job page. Approving a card in chat does not send mail.
 

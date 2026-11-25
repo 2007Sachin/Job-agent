@@ -8,7 +8,7 @@ export default function SchedulesPage() {
   const [name, setName] = useState("Morning job scout");
   return (
     <div className="space-y-6">
-      <h1 className="text-5xl">Schedules</h1>
+      <h1 className="text-5xl">Routines</h1>
       <p className="max-w-[65ch] text-muted">Routines are saved here. There is no background worker in this deploy, so nothing runs while the tab is closed. Use Run now to do the prompt once and log it.</p>
       <ul className="divide-y divide-line border-y border-line">
         {store.schedules.map((job) => (

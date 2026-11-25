@@ -1,5 +1,6 @@
 "use client";
 
+import { PageHeader } from "@/components/page-header";
 import { useStore } from "@/lib/store";
 import { STAGES, type Stage } from "@/lib/types";
 import Link from "next/link";
@@ -16,8 +17,7 @@ export default function TrackerPage() {
   const { applications, setStage } = useStore();
   return (
     <div>
-      <h1 className="text-5xl">Tracker</h1>
-      <p className="mt-2 text-muted">Drag a card to another column, or use the stage menu. Applying still happens on the employer site.</p>
+      <PageHeader title="Applications" lede="Drag a card, or use the stage menu. The employer site is still where you submit." action={<Link href="/jobs" className="border border-line px-3 py-2 text-sm">Add from Jobs</Link>} />
       <div className="mt-6 flex gap-3 overflow-x-auto pb-4">
         {STAGES.map((stage) => (
           <section
