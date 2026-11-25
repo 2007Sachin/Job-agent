@@ -63,7 +63,7 @@ export const DRAWER_SECTIONS = [
 
 export const WORKS_ON: { id: WorksOn; title: string; detail: string }[] = [
   { id: "auto", title: "Auto", detail: "Pick a free cloud model when a key exists." },
-  { id: "cloud", title: "Cloud", detail: "Send the prompt to LLM_BASE_URL. No job site is opened." },
+  { id: "cloud", title: "Cloud", detail: "Send the prompt to your AI key. No job site is opened." },
   { id: "sandbox", title: "Private sandbox", detail: "Draft in an isolated note. Nothing leaves this tab." },
   { id: "local", title: "This computer", detail: "Keep the draft here. Do not call a model provider." },
 ];

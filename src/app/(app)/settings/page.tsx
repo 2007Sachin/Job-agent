@@ -1,10 +1,27 @@
 "use client";
 
+import { ADVANCED_KEY, readAdvanced } from "@/lib/advanced";
 import { useStore } from "@/lib/store";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
 import { emptyProfile } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+
+function AdvancedToggle() {
+  const [on, setOn] = useState(false);
+  useEffect(() => { setOn(readAdvanced()); }, []);
+  return (
+    <section className="card space-y-2 p-4">
+      <h2 className="text-[16px] font-medium">Advanced</h2>
+      <p className="text-[13px] text-[var(--muted)]">Off by default. Turns on the helper desk, group chats, automations, and the model picker.</p>
+      <label className="flex items-center gap-2">
+        <input type="checkbox" checked={on} onChange={(e) => { setOn(e.target.checked); localStorage.setItem(ADVANCED_KEY, e.target.checked ? "on" : "off"); }} />
+        Show advanced tools
+      </label>
+      <p className="text-[13px] text-[var(--muted)]">Drafts use a free AI model when your AI key is set in the server environment.</p>
+    </section>
+  );
+}
 
 function ExtensionPair() {
   const [token, setToken] = useState("");
@@ -122,6 +139,7 @@ function SettingsBody() {
   return (
     <div className="max-w-2xl space-y-8">
       <h1 className="text-4xl">Settings</h1>
+      <AdvancedToggle />
       <ExtensionPair />
       {gmail === "connected" && <p className="text-sm text-moss">Gmail is connected for sending.</p>}
       {gmail === "missing" && <p className="text-sm text-danger">Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET before connecting Gmail.</p>}

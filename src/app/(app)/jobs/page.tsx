@@ -7,12 +7,22 @@ import { scoreMatch } from "@/lib/match";
 import { useStore } from "@/lib/store";
 import type { Job } from "@/lib/types";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 export default function JobsPage() {
+  return (
+    <Suspense fallback={<p>Loading…</p>}>
+      <JobsBody />
+    </Suspense>
+  );
+}
+
+function JobsBody() {
+  const params = useSearchParams();
   const { profile, feed, setFeed, saveJob, applications } = useStore();
-  const [q, setQ] = useState(profile.targetRoles[0] ?? "");
-  const [location, setLocation] = useState(profile.locations[0] ?? "");
+  const [q, setQ] = useState(params.get("q") || profile.targetRoles[0] || "");
+  const [location, setLocation] = useState(params.get("location") || profile.locations[0] || "");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

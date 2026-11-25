@@ -124,8 +124,9 @@ export default function JobDetailPage() {
         <p className="mt-4 max-w-[62ch]">{match.score} match. {match.reasons.join(" ")}</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <button type="button" className="bg-brass" onClick={() => { store.saveJob(job); setNote("Saved. Open My applications to see it."); }}>
-            {application ? `Saved (${application.stage})` : "Save this job"}
+            {application ? "Saved" : "Save this job"}
           </button>
+          <Link href="/chat?helper=bot-scout" className="border border-line px-3 py-2 text-sm">Ask Helper</Link>
           {job.url && (
             <a className="border border-line px-3 py-2 text-sm" href={job.url} target="_blank" rel="noreferrer">Open apply link</a>
           )}

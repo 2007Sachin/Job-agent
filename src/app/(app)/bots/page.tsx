@@ -1,6 +1,7 @@
 "use client";
 
 import { Kip } from "@/components/kip";
+import { DEFAULT_MODEL, modelLabel } from "@/lib/model-label";
 import { useStore } from "@/lib/store";
 import { BOT_TEMPLATES } from "@/lib/workspace";
 import { useState } from "react";
@@ -34,7 +35,7 @@ export default function BotsPage() {
                 </label>
                 <label className="mt-2 block text-sm">Model
                   <select value={bot.model} onChange={(e) => saveBot({ ...bot, model: e.target.value })} className="mt-1 w-full border border-line bg-card px-2 py-1">
-                    {["env:LLM_MODEL", "Gemini", "Groq", "NVIDIA"].map((m) => <option key={m}>{m}</option>)}
+                    {[DEFAULT_MODEL, "Gemini", "Groq", "NVIDIA"].map((m) => <option key={m} value={m}>{modelLabel(m)}</option>)}
                   </select>
                 </label>
                 <label className="mt-2 block text-sm">Temperature {bot.temperature ?? 0.4}
@@ -63,7 +64,7 @@ export default function BotsPage() {
             avatar: "custom",
             role: role || "Custom helper",
             systemPrompt: prompt || "Help the seeker with the skills that are enabled. Do not invent their history.",
-            model: "env:LLM_MODEL",
+            model: DEFAULT_MODEL,
             skillIds,
             connectorIds: [],
             builtin: false,

@@ -40,12 +40,10 @@ export default function AppsPage() {
               <h2 className="text-2xl">{card.name}</h2>
               <p>{card.plain}</p>
               <p className="text-sm text-muted">Access: {card.scopes}</p>
-              <p>Status: {row.status === "connected" ? "Connected" : row.status === "needs-reauth" ? "Needs sign-in again" : "Not connected"}</p>
+              <p>Status: {card.kind === "link" ? "Opens in your tab" : "Not connected"}</p>
               <div className="flex flex-wrap gap-2">
-                {card.kind === "oauth" && card.id === "gmail" && <a className="btn border border-line" href="/api/email/gmail/start">Connect</a>}
-                <button type="button" className="border border-line px-3 py-2" onClick={() => write(rows.map((item) => item.id === card.id ? { ...item, status: item.status === "connected" ? "not-connected" : "connected" } : item))}>
-                  {row.status === "connected" ? "Disconnect" : "Mark connected"}
-                </button>
+                {card.id === "gmail" && <a className="btn bg-brass" href="/api/email/gmail/start">Connect Gmail</a>}
+                {card.id !== "gmail" && card.kind === "oauth" && <p className="text-[13px] text-[var(--muted)]">Coming soon</p>}
               </div>
               <fieldset>
                 <legend className="text-sm">Which helpers may use this</legend>

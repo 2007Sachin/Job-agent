@@ -4,7 +4,8 @@ import { ScreenState } from "@/components/screen-state";
 import { HelperDrawer } from "@/components/helper-drawer";
 import { DiamondFace, HelperMark } from "@/components/helper-mark";
 import { SidePanel } from "@/components/side-panel";
-import { modelLabel } from "@/lib/model-label";
+import { readAdvanced } from "@/lib/advanced";
+import { DEFAULT_MODEL, modelLabel } from "@/lib/model-label";
 import { botHint, plainBot } from "@/lib/plain";
 import { useStore } from "@/lib/store";
 import type { ToolCard } from "@/lib/workspace";
@@ -25,14 +26,17 @@ function ChatBody() {
   const [botId, setBotId] = useState(params.get("helper") || store.bots[0]?.id || "bot-scout");
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [panel, setPanel] = useState(true);
+  const [advanced, setAdvanced] = useState(false);
+  const [panel, setPanel] = useState(false);
+  useEffect(() => { setAdvanced(readAdvanced()); }, []);
   useEffect(() => {
+    if (!advanced) return;
     const mq = window.matchMedia("(max-width: 767px)");
-    const apply = () => { if (mq.matches) setPanel(false); };
+    const apply = () => setPanel(!mq.matches);
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
-  }, []);
+  }, [advanced]);
   useEffect(() => {
     const next = params.get("helper");
     if (next) setBotId(next);
@@ -147,30 +151,28 @@ function ChatBody() {
   }
 
   return (
-    <div className={`grid min-h-screen ${panel ? "md:grid-cols-[1fr_400px]" : ""}`}>
+    <div className={`grid min-h-screen ${advanced && panel ? "md:grid-cols-[1fr_400px]" : ""}`}>
       <section className="flex min-h-screen flex-col bg-white">
         <header className="grid grid-cols-[1fr_auto] items-start gap-3 px-6 py-4">
           <div className="flex justify-center">
-            <button type="button" className="flex items-center gap-2 rounded-full bg-[var(--rail)] px-3 py-1" onClick={() => setDrawer(true)}>
-              <HelperMark name={plainBot(bot?.name || "Helper")} size={22} />
-              <span className="font-semibold">{plainBot(bot?.name || "Helper")}</span>
-              <span aria-hidden>✎</span>
-              <span className="text-[var(--muted)]">{bot?.role}</span>
+            <button type="button" className="flex max-w-full items-center gap-2 rounded-full bg-[var(--rail)] px-3 py-1" onClick={() => advanced && setDrawer(true)}>
+              <HelperMark name="Helper" size={22} />
+              <span className="truncate font-semibold">{advanced ? plainBot(bot?.name || "Helper") : "Helper"}</span>
             </button>
           </div>
-          <div className="flex items-center gap-2">
+          {advanced && <div className="flex items-center gap-2">
             <label className="flex items-center gap-1 rounded-full bg-[var(--rail)] px-3 py-1 text-[13px]">
               <span aria-hidden>✦</span>
               <select className="border-0 bg-transparent p-0" value={bot?.model || ""} onChange={(e) => bot && store.saveBot({ ...bot, model: e.target.value })} aria-label="Model">
-                {["env:LLM_MODEL", "Groq", "Gemini", "NVIDIA", bot?.model].filter((v, i, all) => v && all.indexOf(v) === i).map((model) => (
+                {[DEFAULT_MODEL, "Groq", "Gemini", "NVIDIA", bot?.model].filter((v, i, all) => v && all.indexOf(v) === i).map((model) => (
                   <option key={model} value={model}>{modelLabel(model || "")}</option>
                 ))}
               </select>
             </label>
             <button type="button" aria-label="Helper screen" className="rounded-full bg-[var(--rail)] px-3" onClick={() => setPanel((v) => !v)}>▢</button>
             <button type="button" aria-label="More" className="rounded-full bg-[var(--rail)] px-3" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>•••</button>
-          </div>
-          {menu && (
+          </div>}
+          {advanced && menu && (
             <div className="col-span-2 flex justify-end gap-3 text-[13px]">
               <button type="button" onClick={() => { setDrawer(true); setMenu(false); }}>Helper profile</button>
             </div>
@@ -237,8 +239,8 @@ function ChatBody() {
           </div>
         </form>
       </section>
-      {panel && bot && <SidePanel bot={bot} onClose={() => setPanel(false)} />}
-      {drawer && bot && <HelperDrawer bot={bot} onClose={() => setDrawer(false)} />}
+      {advanced && panel && bot && <SidePanel bot={bot} onClose={() => setPanel(false)} />}
+      {advanced && drawer && bot && <HelperDrawer bot={bot} onClose={() => setDrawer(false)} />}
     </div>
   );
 }

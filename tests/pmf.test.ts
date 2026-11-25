@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 describe("pmf helpers", () => {
   it("hides the raw model env name", () => {
-    expect(modelLabel("env:LLM_MODEL")).toBe("Free model");
+    expect(modelLabel("env:LLM_MODEL")).toBe("Free AI model");
     expect(modelLabel("llama-3.3-70b-versatile")).toBe("llama-3.3-70b-versatile");
   });
 

@@ -43,7 +43,7 @@ export default function OnboardingPage() {
   const [parsing, setParsing] = useState(false);
   const steps = ["Your resume", "Jobs you want", "Jobs that fit", "Save the first one"];
   useEffect(() => {
-    if (profile.onboarded) router.replace("/jobs");
+    if (profile.onboarded) router.replace("/dashboard");
     // Only when this page is opened again, not when Finish sets onboarded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
