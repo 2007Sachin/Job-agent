@@ -64,8 +64,22 @@ function Form({ mode }: { mode: "login" | "signup" }) {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-md px-5 py-16">
-        <h1 className="text-5xl">{mode === "login" ? "Log in" : "Create an account"}</h1>
+      <main className={`mx-auto px-5 py-16 ${mode === "signup" ? "grid max-w-5xl items-start gap-10 lg:grid-cols-2" : "max-w-md"}`}>
+        {mode === "signup" && (
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-[var(--accent)]">Free to start</p>
+            <h1 className="mt-3 text-5xl">Start free. You still press send.</h1>
+            <ul className="mt-6 space-y-3 text-muted">
+              <li>One search across public job boards.</li>
+              <li>A resume drafted only from your real history.</li>
+              <li>Helpers, a Chrome save button, and follow-ups you approve.</li>
+              <li>No auto-apply. No LinkedIn automation.</li>
+            </ul>
+          </div>
+        )}
+        <div>
+        {mode === "login" && <h1 className="text-5xl">Log in</h1>}
+        {mode === "signup" && <h2 className="text-3xl">Create an account</h2>}
         <p className="mt-3 text-muted">Email and Google use Firebase Auth. The demo desk works with no keys and stays in this browser.</p>
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <label className="block text-sm">
@@ -100,6 +114,7 @@ function Form({ mode }: { mode: "login" | "signup" }) {
         <p className="mt-6 text-sm text-muted">
           {mode === "login" ? <Link href="/signup" className="underline">Need an account?</Link> : <Link href="/login" className="underline">Already registered?</Link>}
         </p>
+        </div>
       </main>
     </>
   );

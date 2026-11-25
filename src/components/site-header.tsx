@@ -24,7 +24,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-4">
           <ThemeToggle />
           <Link href="/login" className="hidden text-sm sm:inline">Log in</Link>
-          <Link href="/signup" className="bg-ink px-3 py-2 text-sm text-paper">Start</Link>
+          <Link href="/signup" className="bg-ink px-3 py-2 text-sm text-paper">Start free</Link>
           <button type="button" className="text-sm md:hidden" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
             Menu
           </button>
