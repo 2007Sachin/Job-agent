@@ -154,8 +154,20 @@ button, .btn {
   [data-theme="dark"] aside { background: #2a2420; }
 }
 
+.product-stage { min-height: 420px; }
+.stage-panel { position: absolute; inset: 52px 16px 16px; }
+.stage-a { animation: stage-show 12s infinite; }
+.stage-b { animation: stage-show 12s infinite; animation-delay: -8s; }
+.stage-c { animation: stage-show 12s infinite; animation-delay: -4s; }
+@keyframes stage-show {
+  0%, 28% { opacity: 1; }
+  33%, 100% { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .stage-panel { position: static; inset: auto; opacity: 1; margin-top: 12px; }
+  .product-stage { min-height: 0; }
 }
 
 @media (prefers-reduced-transparency: reduce) {
