@@ -5,7 +5,7 @@ Sellable job-application product for any role. Checked against the original surf
 | # | Gap | Impact | Sev | Effort | Fix plan | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Applications and outreach stay in the browser after Supabase sign-in. The tables exist in `0001_init.sql` and are never written. | A second device or a cleared browser loses the tracker and the emails. | P0 | M | Upsert both tables on change and hydrate them on sign-in. | fixed: `remote-rows` round-trip test, upsert on persist, hydrate on pull |
-| 2 | No GitHub Actions workflow. Lint, test, and build run only on a laptop. | A bad commit can merge with nothing catching it. | P0 | S | Add a workflow that runs lint, test, and build. | open |
+| 2 | No GitHub Actions workflow. Lint, test, and build run only on a laptop. | A bad commit can merge with nothing catching it. | P0 | S | Add a workflow that runs lint, test, and build. | fixed: `.github/workflows/ci.yml` runs lint, test, and build |
 | 3 | Resume upload rejects DOCX. Many resumes are Word files. | Onboarding stops for a common file. | P0 | S | Parse DOCX to text on the existing upload route. | open |
 | 4 | A helper’s model and temperature are stored and ignored. Every draft uses `LLM_MODEL` and temperature 0.4. | The bot settings screen lies. | P1 | S | Pass temperature always, and pass the model only when it is a real model id (labels like “Groq” stay on the default). | open |
 | 5 | `usage_daily` is never incremented. The daily cap lives in process memory and resets on every deploy. | Caps do not survive a restart, and the table the migration created is unused. | P1 | M | When the service role and a signed-in user are present, add 1 to today’s row. Memory remains the fallback. | open |
