@@ -2,6 +2,7 @@ import { clientKey } from "@/lib/job-sources";
 import { apiModel, complete, llmConfigured } from "@/lib/llm";
 import { enforceDailyCap } from "@/lib/rate-limit";
 import { templateCover, templateEmail, templateLinkedIn, templateResume } from "@/lib/templates";
+import { noteUsage } from "@/lib/usage-log";
 import type { Job, Profile } from "@/lib/types";
 import { NextResponse } from "next/server";
 
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing profile, job, or kind." }, { status: 400 });
   }
   const limit = enforceDailyCap(`llm:${clientKey(request)}`);
+  void noteUsage(request, "generate");
   if (!limit.ok) {
     return NextResponse.json(
       { error: `Daily generation cap (${limit.limit}) reached. Raise LLM_DAILY_CAP or wait until tomorrow.` },

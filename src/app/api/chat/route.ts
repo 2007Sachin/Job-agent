@@ -7,6 +7,7 @@ import { scoreMatch } from "@/lib/match";
 import { enforceDailyCap } from "@/lib/rate-limit";
 import { templateCover, templateEmail, templateLinkedIn, templateResume } from "@/lib/templates";
 import type { Job, Profile } from "@/lib/types";
+import { noteUsage } from "@/lib/usage-log";
 import type { BotDef, SkillDef } from "@/lib/workspace";
 import { NextResponse } from "next/server";
 
@@ -72,6 +73,7 @@ function syntheticJob(query: string, attachment: string): Job {
 
 export async function POST(request: Request) {
   const limit = enforceDailyCap(`chat:${clientKey(request)}`);
+  void noteUsage(request, "chat");
   if (!limit.ok) return NextResponse.json({ error: "Daily chat cap reached." }, { status: 429 });
   const body = (await request.json()) as Body;
   if (!body.text || !body.bot || !body.profile) {
