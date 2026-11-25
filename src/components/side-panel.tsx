@@ -73,7 +73,7 @@ export function SidePanel({ bot, onClose }: { bot: BotDef; onClose: () => void }
             {WORKS_ON.map((choice) => {
               const on = prefs.worksOn === choice.id;
               return (
-                <button key={choice.id} type="button" onClick={() => setWorks(choice.id)} className={`rounded-xl p-3 text-left text-[12px] ${on ? "border border-blue-500 bg-blue-50" : "border border-transparent bg-[var(--rail)]"}`}>
+                <button key={choice.id} type="button" onClick={() => setWorks(choice.id)} className={`rounded-xl p-3 text-left text-[12px] ${on ? "border border-[var(--accent)] bg-[var(--accent-soft)]" : "border border-transparent bg-[var(--rail)]"}`}>
                   <span className="block font-semibold text-ink">{on ? "✓ " : ""}{choice.title}</span>
                   <span className="mt-1 block text-[var(--muted)]">{choice.detail}</span>
                 </button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { GoogleMark } from "./google-mark";
 import { SiteHeader } from "./site-header";
 import { useStore } from "@/lib/store";
 import { clientAuth, firebaseConfigured } from "@/lib/firebase/browser";
@@ -80,8 +81,9 @@ function Form({ mode }: { mode: "login" | "signup" }) {
           </button>
         </form>
         <div className="mt-4 flex flex-col gap-3">
-          <button type="button" onClick={() => void google()} className="border border-line px-4 py-2 text-left" disabled={!configured}>
-            Continue with Google {configured ? "" : "(needs Firebase)"}
+          <button type="button" onClick={() => void google()} className="inline-flex items-center gap-3 px-4 py-2 text-left" disabled={!configured}>
+            <GoogleMark />
+            Continue with Google{configured ? "" : " (needs Firebase)"}
           </button>
           <button
             type="button"

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { Fraunces, Source_Sans_3 } from "next/font/google";
 import { StoreProvider } from "@/lib/store";
 import "./globals.css";
+
+const display = Fraunces({ subsets: ["latin"], variable: "--font-display-family" });
+const text = Source_Sans_3({ subsets: ["latin"], variable: "--font-text" });
 
 export const metadata: Metadata = {
   title: { default: "Job-agent", template: "%s · Job-agent" },
@@ -12,7 +16,7 @@ const themeScript = `try{var t=localStorage.getItem('jobagent-theme');if(t==='da
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${display.variable} ${text.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
