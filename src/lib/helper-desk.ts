@@ -42,7 +42,7 @@ export function liveStatus(bot: BotDef) {
   if (prefs.screen === "stopped") return "Paused";
   if (prefs.screen === "active" && bot.skillIds.includes("skill-search")) return "Searching jobs…";
   if (prefs.screen === "active") return "Drafting…";
-  return "Ready when you ask";
+  return "Idle";
 }
 
 export const DRAWER_SECTIONS = [

@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { StoreProvider } from "@/lib/store";
 import "./globals.css";
-
-const sans = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: { default: "Job-agent", template: "%s · Job-agent" },
@@ -15,7 +12,7 @@ const themeScript = `try{var t=localStorage.getItem('jobagent-theme');if(t==='da
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={sans.variable} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

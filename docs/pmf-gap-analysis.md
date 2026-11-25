@@ -78,9 +78,9 @@ Impact is how much it helps someone finish an application. Effort is how much of
 | 2 | Shell polish: labels, icons, descriptions, Dark/Out | High | Low | fixed — Lucide icons, full role line, model reads Free model, theme is an icon |
 | 3 | Funnel: saved, applied, interview, offer | High | Low | fixed — four counts on How you are doing |
 | 4 | Follow-up reminders stay visible | Medium | Low | fixed — due list, plus a line when none are due |
-| 5 | Plan page with free limits, no charge | Medium | Low | partial — /plans lists limits and says Plus is not for sale |
-| 6 | Mobile rail and panel | Medium | Medium | partial — menu button under 768px; panel stacks |
-| 7 | Empty, loading, and error states | Medium | Low | partial — chat error and drafting line; tracker and funnel empty lines |
+| 5 | Plan page with free limits, no charge | Medium | Low | fixed — /plans states free limits and that Plus is not for sale |
+| 6 | Mobile rail and panel | Medium | Medium | fixed — drawer under 768px, side panel full screen, composer stays at the bottom |
+| 7 | Empty, loading, and error states | Medium | Low | fixed — shared empty, skeleton, and retry states on the main screens |
 | 8 | Salary insights | Medium | High | open |
 | 9 | Real billing | Medium | High | open |
 | 10 | Invite loop | Low | Medium | open |

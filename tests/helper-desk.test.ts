@@ -7,7 +7,7 @@ describe("helper desk", () => {
     const bot = BUILTIN_BOTS[0];
     expect(prefsOf(bot).worksOn).toBe("auto");
     expect(prefsOf(bot).approveApply).toBe(true);
-    expect(liveStatus(bot)).toBe("Ready when you ask");
+    expect(liveStatus(bot)).toBe("Idle");
     expect(liveStatus({ ...bot, screen: "active" } as typeof bot)).toBe("Searching jobs…");
   });
 });

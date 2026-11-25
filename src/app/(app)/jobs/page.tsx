@@ -1,6 +1,7 @@
 "use client";
 
 import { BoardSearchPanel } from "@/components/board-search";
+import { ScreenState } from "@/components/screen-state";
 import { Kip } from "@/components/kip";
 import { scoreMatch } from "@/lib/match";
 import { useStore } from "@/lib/store";
@@ -21,15 +22,20 @@ export default function JobsPage() {
     e?.preventDefault();
     setLoading(true);
     setError("");
-    const res = await fetch(`/api/jobs?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}`);
-    const json = await res.json();
-    setLoading(false);
-    if (!res.ok) {
-      setError("Search failed");
-      return;
+    try {
+      const res = await fetch(`/api/jobs?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}`);
+      const json = await res.json();
+      setLoading(false);
+      if (!res.ok) {
+        setError("Search failed. Try again.");
+        return;
+      }
+      setFeed(json.jobs);
+      setWarnings(json.warnings ?? []);
+    } catch {
+      setLoading(false);
+      setError("Search failed. Check the connection and try again.");
     }
-    setFeed(json.jobs);
-    setWarnings(json.warnings ?? []);
   }
 
   async function ingest(e: React.FormEvent) {
@@ -71,7 +77,8 @@ export default function JobsPage() {
       {warnings.length > 0 && (
         <ul className="text-sm text-muted">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
       )}
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {loading && <ScreenState kind="loading" title="Looking" detail="Searching public lists." />}
+      {error && <ScreenState kind="error" title="Search failed" detail={error} onRetry={() => void search()} />}
       {!rows.length && (
         <div className="card flex items-center gap-4 p-5">
           <Kip className="h-16 w-16" />

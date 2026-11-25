@@ -1,6 +1,6 @@
 "use client";
 
-import { Kip } from "@/components/kip";
+import { ScreenState } from "@/components/screen-state";
 import { PageHeader } from "@/components/page-header";
 import { useStore } from "@/lib/store";
 import { STAGES, type Stage } from "@/lib/types";
@@ -33,9 +33,8 @@ export default function TrackerPage() {
         </section>
       )}
       {!applications.length && (
-        <div className="card mb-4 flex items-center gap-4 p-5">
-          <Kip className="h-16 w-16" />
-          <p>Nothing saved yet. Press Find jobs, open one, and press Save this job.</p>
+        <div className="mb-4">
+          <ScreenState kind="empty" title="No applications yet" detail="Find a job, open it, and press Save this job." />
         </div>
       )}
       <div className="mt-6 flex gap-3 overflow-x-auto pb-4">

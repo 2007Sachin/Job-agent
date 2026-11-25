@@ -27,7 +27,7 @@ export function SidePanel({ bot, onClose }: { bot: BotDef; onClose: () => void }
   }
 
   return (
-    <aside className="flex h-full w-full flex-col border-l border-[var(--line)] bg-white max-md:border-t md:w-[400px]">
+    <aside className="flex h-full w-full flex-col border-l border-[var(--line)] bg-white max-md:fixed max-md:inset-0 max-md:z-30 md:w-[400px]">
       <div className="flex items-center gap-2 px-3 py-3">
         <span aria-hidden className="text-[var(--muted)]">⚙</span>
         <div className="flex flex-1 rounded-full bg-[var(--rail)] p-1">

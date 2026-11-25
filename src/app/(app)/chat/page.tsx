@@ -1,5 +1,6 @@
 "use client";
 
+import { ScreenState } from "@/components/screen-state";
 import { HelperDrawer } from "@/components/helper-drawer";
 import { DiamondFace, HelperMark } from "@/components/helper-mark";
 import { SidePanel } from "@/components/side-panel";
@@ -25,6 +26,13 @@ function ChatBody() {
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
   const [panel, setPanel] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () => { if (mq.matches) setPanel(false); };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
   useEffect(() => {
     const next = params.get("helper");
     if (next) setBotId(next);
@@ -210,9 +218,9 @@ function ChatBody() {
             </article>
           )}
           {busy && <p className="text-sm text-muted" role="status">Drafting…</p>}
-          {chatError && <p className="text-sm text-danger" role="alert">{chatError}</p>}
+          {chatError && <ScreenState kind="error" title="The helper did not answer" detail={chatError} onRetry={() => { setChatError(""); }} />}
         </div>
-        <form onSubmit={send} className="px-6 pb-6">
+        <form onSubmit={send} className="sticky bottom-0 bg-white px-4 py-3 md:px-6 md:pb-6">
           {attachmentName && <p className="mb-2 text-xs text-muted">Attached {attachmentName}</p>}
           <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 py-2 shadow-sm">
             <label className="text-[var(--muted)]" aria-label="Attach">

@@ -1,5 +1,6 @@
 "use client";
 
+import { ScreenState } from "@/components/screen-state";
 import { useStore } from "@/lib/store";
 import Link from "next/link";
 
@@ -13,7 +14,7 @@ export default function InboxPage() {
         {activity.map((item) => (
           <li key={item.id} className="card p-3">{item.text}</li>
         ))}
-        {!activity.length && <li className="card p-4">No notes yet. Start a helper from chat.</li>}
+        {!activity.length && <ScreenState kind="empty" title="Inbox is empty" detail="Notes from helpers show up here. Nothing is sent to an employer." />}
       </ul>
       <p className="text-sm"><Link className="underline" href={`/chat?helper=${bots[0]?.id || ""}`}>Open a helper</Link></p>
     </div>

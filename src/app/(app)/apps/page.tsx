@@ -1,5 +1,6 @@
 "use client";
 
+import { ScreenState } from "@/components/screen-state";
 import { APP_CARDS } from "@/lib/helper-desk";
 import { plainBot } from "@/lib/plain";
 import { useStore } from "@/lib/store";
@@ -30,6 +31,7 @@ export default function AppsPage() {
     <div className="space-y-4">
       <h1 className="text-4xl">Connected apps</h1>
       <p>Google can connect when its keys are set. Other cards remember a choice on this device until a live account is available. Job sites open in your tab only.</p>
+      {!rows.length && <ScreenState kind="loading" title="Loading apps" detail="Reading connections on this device." />}
       <ul className="space-y-3">
         {APP_CARDS.map((card) => {
           const row = rows.find((item) => item.id === card.id) || { id: card.id, status: "not-connected" as const, helpers: [] };

@@ -5,7 +5,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { Toasts } from "./toast";
 import { HelperMark } from "./helper-mark";
 import { liveStatus } from "@/lib/helper-desk";
-import { plainBot } from "@/lib/plain";
+import { plainBot, roleTag } from "@/lib/plain";
 import { useStore } from "@/lib/store";
 import { Inbox, LogOut, Menu, Plus, Search, Settings, Share2, Users, Workflow, X } from "lucide-react";
 import Link from "next/link";
@@ -55,7 +55,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <aside className={`${nav ? "fixed inset-y-0 left-0 z-40 flex w-[240px]" : "hidden md:flex"} flex-col bg-[var(--rail)] md:sticky md:top-0 md:h-screen`}>
         <div className="flex items-center gap-2 px-3 pt-3">
           <button type="button" className="flex min-h-9 flex-1 items-center gap-2 rounded-full bg-white px-3 text-left text-[13px] text-muted" onClick={() => window.dispatchEvent(new Event("jobagent-search"))}>
-            <Search size={14} aria-hidden /> Search
+            <Search size={16} strokeWidth={1.75} aria-hidden /> Search
           </button>
           <Link href="/bots" aria-label="New helper" className="flex h-8 w-8 items-center justify-center rounded-full"><Plus size={16} /></Link>
           <button type="button" className="md:hidden" aria-label="Close menu" onClick={() => setNav(false)}><X size={16} /></button>
@@ -81,8 +81,8 @@ function Shell({ children }: { children: React.ReactNode }) {
                   <HelperMark name={plainBot(bot.name)} />
                   <span className="min-w-0 flex-1">
                     <span className="font-semibold">{plainBot(bot.name)}</span>
-                    <span className="mt-0.5 line-clamp-2 block text-[var(--muted)]">{bot.role}</span>
-                    <span className="block truncate text-[var(--muted)]">{liveStatus(bot)}</span>
+                    <span className="ml-1 text-[12px] text-[var(--faint)]">{roleTag(bot.name)}</span>
+                    <span className="block truncate text-[12px] text-[var(--muted)]">{liveStatus(bot)}</span>
                   </span>
                 </Link>
               );
@@ -121,7 +121,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 function Section({ title, open, onToggle, children }: { title: string; open: boolean; onToggle: () => void; children: React.ReactNode }) {
   return (
     <div className="pt-3">
-      <button type="button" className="flex w-full items-center px-2 text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]" onClick={onToggle}>
+      <button type="button" className="flex w-full items-center px-2 text-[12px] font-medium text-[var(--muted)]" onClick={onToggle}>
         <span className="mr-1">{open ? "▾" : "▸"}</span>
         {title}
       </button>

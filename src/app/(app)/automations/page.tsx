@@ -1,5 +1,6 @@
 "use client";
 
+import { ScreenState } from "@/components/screen-state";
 import { useStore } from "@/lib/store";
 import Link from "next/link";
 
@@ -11,7 +12,7 @@ export default function AutomationsPage() {
       <p>A routine writes a note at a time you pick. It does not send email or open a job site.</p>
       <ul className="space-y-2">
         {schedules.map((row) => <li key={row.id} className="card p-3">{row.name} · {row.time} · {row.enabled ? "On" : "Off"}</li>)}
-        {!schedules.length && <li className="card p-4">No routines yet.</li>}
+        {!schedules.length && <ScreenState kind="empty" title="No routines" detail="A routine writes a note at a time you pick. It does not send email." />}
       </ul>
       <Link href="/schedules" className="underline">Edit reminders</Link>
     </div>

@@ -16,6 +16,19 @@ const hints: Record<string, string> = {
   Relay: "Picks which helper should answer in a group.",
 };
 
+const tags: Record<string, string> = {
+  "Job Scout": "Job finder",
+  "Resume Tailor": "Resumes",
+  "Outreach Writer": "Notes",
+  "Application Coach": "Tracker",
+  "Interview Prep": "Interview prep",
+  Relay: "Group guide",
+};
+
+export function roleTag(name: string) {
+  return tags[name] ?? "Helper";
+}
+
 export function plainBot(name: string) {
   return names[name] ?? name;
 }

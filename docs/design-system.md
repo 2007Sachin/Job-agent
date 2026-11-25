@@ -21,7 +21,7 @@ A helper can draft words. The person sends email and submits the application.
 | Ink | `#1a1c16` | `#f3f4ee` | Body text, 4.5:1 on canvas and surface |
 | Secondary text | `#3d4236` | `#c9d0be` | Hints. Still 4.5:1. Never pale gray. |
 | Line | `#d9d6cc` | `#3a3f32` | 1px borders |
-| Primary | `#1f4d2e` | `#b6f27c` | One filled button per screen. Label is near-white on green in light mode, near-black on lime in dark mode. |
+| Accent | `#2f6fed` | `#8aafff` | Selection, focus, and the one filled button. Selected fill `#eaf1fe`. |
 | Danger | `#8f1d35` | `#ffb3c0` | Delete and failed sends |
 
 No gradient text. No decorative blobs. No glow.
