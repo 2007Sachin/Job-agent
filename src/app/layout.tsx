@@ -6,8 +6,9 @@ import "./globals.css";
 const sans = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Job-agent",
+  title: { default: "Job-agent", template: "%s · Job-agent" },
   description: "Find a job, make a resume for it, and keep track. Nothing is sent unless you say so.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
 };
 
 const themeScript = `try{var t=localStorage.getItem('jobagent-theme');if(t==='dark')document.documentElement.dataset.theme='dark'}catch(e){}`;
