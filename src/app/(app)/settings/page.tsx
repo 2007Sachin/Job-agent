@@ -55,11 +55,13 @@ function ExtensionPair() {
     <section className="card space-y-3 p-4">
       <h2 className="text-2xl">Connect the extension</h2>
       <p>The extension reads only the job page you are viewing, and only after you click Save to Job-agent. It does not crawl, paginate, or apply. LinkedIn’s terms restrict automation, so Job-agent never signs in to LinkedIn or clicks anything there for you.</p>
+      <p><a className="underline" href="/job-agent-extension.zip" download>Download the Job-agent extension</a></p>
       <ol className="list-decimal space-y-1 pl-5">
-        <li>Chrome: open chrome://extensions and turn on Developer mode.</li>
-        <li>Load unpacked and choose the extension folder in this project.</li>
+        <li>Download the Job-agent extension (the zip above).</li>
+        <li>Unzip it. You should see a folder named extension.</li>
+        <li>In Chrome, open chrome://extensions and turn on Developer mode.</li>
+        <li>Choose Load unpacked and select that unzipped extension folder.</li>
         <li>Press Make a pairing token and paste it into the extension popup.</li>
-        <li>A Chrome Web Store listing can come later. Load unpacked is enough now.</li>
       </ol>
       <div className="flex flex-wrap gap-2">
         <button type="button" className="bg-brass" onClick={() => void pair()}>Make a pairing token</button>
