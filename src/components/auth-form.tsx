@@ -69,11 +69,11 @@ function Form({ mode }: { mode: "login" | "signup" }) {
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <label className="block text-sm">
             Email
-            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full border border-line bg-card px-3 py-2" autoComplete="email" />
+            <input id="email" name="email" required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full border border-line bg-card px-3 py-2" autoComplete="username" />
           </label>
           <label className="block text-sm">
             Password
-            <input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 w-full border border-line bg-card px-3 py-2" autoComplete={mode === "login" ? "current-password" : "new-password"} />
+            <input id="password" name="password" required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 w-full border border-line bg-card px-3 py-2" autoComplete={mode === "login" ? "current-password" : "new-password"} />
           </label>
           <button disabled={pending} className="bg-ink px-4 py-2 text-paper disabled:opacity-60" type="submit">
             {pending ? "Working…" : mode === "login" ? "Log in" : "Sign up"}

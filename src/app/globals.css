@@ -18,6 +18,10 @@
   --card: #f3f3f3;
   --danger: #c2413b;
   --shadow: none;
+  color-scheme: light dark;
+}
+
+:root:has(> head > meta[name="color-scheme"][content="light"]) {
   color-scheme: light;
 }
 
