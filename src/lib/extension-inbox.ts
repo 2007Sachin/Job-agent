@@ -1,7 +1,11 @@
 import type { Job } from "./types";
 
-const revoked = new Set<string>();
-const inbox = new Map<string, Job[]>();
+type Bag = { revoked: Set<string>; inbox: Map<string, Job[]> };
+const bag: Bag = ((globalThis as unknown as { __jobAgentInbox?: Bag }).__jobAgentInbox ??= {
+  revoked: new Set<string>(),
+  inbox: new Map<string, Job[]>(),
+});
+const { revoked, inbox } = bag;
 
 export function revokeToken(token: string) {
   revoked.add(token);

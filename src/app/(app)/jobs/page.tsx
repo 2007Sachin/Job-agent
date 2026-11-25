@@ -67,7 +67,7 @@ export default function JobsPage() {
         </label>
         <button className="self-end bg-brass" disabled={loading}>{loading ? "Looking…" : "Find jobs"}</button>
       </form>
-      <BoardSearchPanel keywords={q} location={location} onSaved={(job) => { setFeed([job, ...feed.filter((row) => row.id !== job.id)]); saveJob(job); }} />
+      <BoardSearchPanel keywords={q} location={location} onSaved={(job) => { saveJob(job); setFeed([job, ...feed.filter((row) => row.id !== job.id)]); }} />
       {warnings.length > 0 && (
         <ul className="text-sm text-muted">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
       )}

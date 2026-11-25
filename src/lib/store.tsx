@@ -357,7 +357,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     updateProfile({ ...patch, onboarded: true });
   }, [updateProfile]);
 
-  const setFeed = useCallback((jobs: Job[]) => setState((s) => ({ ...s, feed: jobs })), []);
+  const setFeed = useCallback((jobs: Job[]) => { commit((s) => ({ ...s, feed: jobs })); }, [commit]);
 
   const saveJob = useCallback((job: Job) => {
     const existing = stateRef.current.applications.find((a) => a.job.id === job.id);
