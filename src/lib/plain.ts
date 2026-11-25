@@ -1,10 +1,10 @@
 const names: Record<string, string> = {
-  "Job Scout": "Job finder",
-  "Resume Tailor": "Resume helper",
-  "Outreach Writer": "Message writer",
-  "Application Coach": "Application helper",
-  "Interview Prep": "Interview practice",
-  Relay: "Lead helper",
+  "Job Scout": "Scout",
+  "Resume Tailor": "Tailor",
+  "Outreach Writer": "Note",
+  "Application Coach": "Tracker",
+  "Interview Prep": "Coach",
+  Relay: "Guide",
 };
 
 const hints: Record<string, string> = {

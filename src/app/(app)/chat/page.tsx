@@ -1,7 +1,7 @@
 "use client";
 
 import { HelperDrawer } from "@/components/helper-drawer";
-import { HelperMark } from "@/components/helper-mark";
+import { DiamondFace, HelperMark } from "@/components/helper-mark";
 import { SidePanel } from "@/components/side-panel";
 import { botHint, plainBot } from "@/lib/plain";
 import { useStore } from "@/lib/store";
@@ -135,36 +135,41 @@ function ChatBody() {
   }
 
   return (
-    <div className="grid min-h-screen md:grid-cols-[1fr_300px]">
-      <section className="flex min-h-[70vh] flex-col">
-        <header className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
-          <HelperMark name={plainBot(bot?.name || "Helper")} />
-          <div className="min-w-0">
-            <p className="font-semibold">{plainBot(bot?.name || "Helper")}</p>
-            <p className="text-sm text-muted">{bot?.role}</p>
+    <div className={`grid min-h-screen ${panel ? "md:grid-cols-[1fr_400px]" : ""}`}>
+      <section className="flex min-h-screen flex-col bg-white">
+        <header className="grid grid-cols-[1fr_auto] items-start gap-3 px-6 py-4">
+          <div className="flex justify-center">
+            <button type="button" className="flex items-center gap-2 rounded-full bg-[var(--rail)] px-3 py-1" onClick={() => setDrawer(true)}>
+              <HelperMark name={plainBot(bot?.name || "Helper")} size={22} />
+              <span className="font-semibold">{plainBot(bot?.name || "Helper")}</span>
+              <span aria-hidden>✎</span>
+              <span className="text-[var(--muted)]">{bot?.role}</span>
+            </button>
           </div>
-          <label className="text-sm">Model
-            <select className="ml-2 border border-line bg-card px-2 py-1" value={bot?.model || ""} onChange={(e) => bot && store.saveBot({ ...bot, model: e.target.value })}>
-              {["env:LLM_MODEL", "Groq", "Gemini", "NVIDIA", bot?.model].filter((v, i, all) => v && all.indexOf(v) === i).map((model) => (
-                <option key={model} value={model}>{model}</option>
-              ))}
-            </select>
-          </label>
-          <button type="button" className="border border-line px-3 py-2" onClick={() => setPanel((v) => !v)}>{panel ? "Hide helper screen" : "Helper screen"}</button>
-          <button type="button" className="border border-line px-3 py-2" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>•••</button>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1 rounded-full bg-[var(--rail)] px-3 py-1 text-[13px]">
+              <span aria-hidden>✦</span>
+              <select className="border-0 bg-transparent p-0" value={bot?.model || ""} onChange={(e) => bot && store.saveBot({ ...bot, model: e.target.value })} aria-label="Model">
+                {["env:LLM_MODEL", "Groq", "Gemini", "NVIDIA", bot?.model].filter((v, i, all) => v && all.indexOf(v) === i).map((model) => (
+                  <option key={model} value={model}>{model}</option>
+                ))}
+              </select>
+            </label>
+            <button type="button" aria-label="Helper screen" className="rounded-full bg-[var(--rail)] px-3" onClick={() => setPanel((v) => !v)}>▢</button>
+            <button type="button" aria-label="More" className="rounded-full bg-[var(--rail)] px-3" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>•••</button>
+          </div>
           {menu && (
-            <div className="flex gap-2">
-              <button type="button" className="underline" onClick={() => { setDrawer(true); setMenu(false); }}>Helper profile</button>
-              <button type="button" className="underline" onClick={() => setBotId(store.bots[0]?.id || botId)}>First helper</button>
+            <div className="col-span-2 flex justify-end gap-3 text-[13px]">
+              <button type="button" onClick={() => { setDrawer(true); setMenu(false); }}>Helper profile</button>
             </div>
           )}
         </header>
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-6">
+        <div className="flex flex-1 flex-col justify-center overflow-y-auto px-8 py-6">
           {!messages.length && bot && (
-            <div className="max-w-md">
-              <HelperMark name={plainBot(bot.name)} />
-              <h1 className="mt-3 text-4xl">{plainBot(bot.name)}</h1>
-              <p className="mt-2">{botHint(bot.name)}</p>
+            <div className="mx-auto max-w-md text-center">
+              <div className="flex justify-center"><DiamondFace name={plainBot(bot.name)} /></div>
+              <h1 className="mt-4 text-2xl font-semibold">{plainBot(bot.name)}</h1>
+              <p className="mt-1 text-[var(--muted)]">{botHint(bot.name)}</p>
             </div>
           )}
           {messages.map((m) => (
@@ -202,19 +207,24 @@ function ChatBody() {
           )}
           {busy && <p className="text-sm text-muted">Drafting…</p>}
         </div>
-        <form onSubmit={send} className="border-t border-line p-4">
+        <form onSubmit={send} className="px-6 pb-6">
           {attachmentName && <p className="mb-2 text-xs text-muted">Attached {attachmentName}</p>}
-          <div className="flex gap-2">
-            <label className="border border-line px-3 py-2 text-sm">
-              File
+          <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 py-2 shadow-sm">
+            <label className="text-[var(--muted)]" aria-label="Attach">
+              ＋
               <input type="file" accept=".pdf,.txt,text/plain,application/pdf" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }} />
             </label>
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder={`Message ${bot?.name}. Try @Resume Tailor`} className="w-full border border-line bg-card px-3 py-2" />
-            <button className="bg-brass px-4 text-paper" disabled={busy}>Send</button>
+            <span className="rounded-full bg-[var(--rail)] px-2 py-0.5 text-[12px]">Goal</span>
+            <span aria-hidden className="text-[var(--muted)]">🛡</span>
+            <span aria-hidden className="text-[var(--muted)]">✦</span>
+            <input value={text} onChange={(e) => setText(e.target.value)} placeholder={`Message ${plainBot(bot?.name || "helper")}`} className="min-h-0 flex-1 border-0 bg-transparent p-0 shadow-none" />
+            <span aria-hidden className="text-[var(--muted)]">◷</span>
+            <span aria-hidden className="text-[var(--muted)]">≋</span>
+            <button className="bg-ink text-paper" disabled={busy}>Send</button>
           </div>
         </form>
       </section>
-      {panel && bot && <SidePanel bot={bot} />}
+      {panel && bot && <SidePanel bot={bot} onClose={() => setPanel(false)} />}
       {drawer && bot && <HelperDrawer bot={bot} onClose={() => setDrawer(false)} />}
     </div>
   );

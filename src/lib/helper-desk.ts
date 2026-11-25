@@ -1,6 +1,6 @@
 import type { BotDef } from "./workspace";
 
-export type WorksOn = "auto" | "cloud" | "local";
+export type WorksOn = "auto" | "cloud" | "sandbox" | "local";
 export type ScreenState = "idle" | "stopped" | "active";
 export type Visibility = "only-me" | "invited";
 
@@ -48,23 +48,24 @@ export function liveStatus(bot: BotDef) {
 export const DRAWER_SECTIONS = [
   ["overview", "Overview"],
   ["identity", "Identity"],
-  ["tone", "Personality and tone"],
+  ["tone", "Personality"],
   ["skills", "Skills"],
   ["memory", "Memory"],
-  ["files", "Files"],
+  ["files", "Library"],
   ["routines", "Routines"],
-  ["apps", "Connected apps"],
+  ["apps", "Access"],
   ["model", "Model"],
   ["permissions", "Permissions"],
   ["alerts", "Voice and alerts"],
-  ["visibility", "Visibility"],
+  ["visibility", "Who can see it"],
   ["history", "History"],
 ] as const;
 
 export const WORKS_ON: { id: WorksOn; title: string; detail: string }[] = [
-  { id: "auto", title: "Auto", detail: "Use a free cloud model when a key is set. Otherwise stay on this device." },
-  { id: "cloud", title: "Cloud", detail: "Send the prompt to the provider in LLM_BASE_URL. Nothing is applied on a job site." },
-  { id: "local", title: "Local-only", detail: "Keep drafts on this device. Do not call a model provider." },
+  { id: "auto", title: "Auto", detail: "Pick a free cloud model when a key exists." },
+  { id: "cloud", title: "Cloud", detail: "Send the prompt to LLM_BASE_URL. No job site is opened." },
+  { id: "sandbox", title: "Private sandbox", detail: "Draft in an isolated note. Nothing leaves this tab." },
+  { id: "local", title: "This computer", detail: "Keep the draft here. Do not call a model provider." },
 ];
 
 export type AppCard = {

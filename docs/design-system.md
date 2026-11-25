@@ -28,10 +28,9 @@ No gradient text. No decorative blobs. No glow.
 
 ## Type
 
-- Family: **Source Sans 3** (open SIL license). One family for UI and headings. Weight 400 for body, 600 for labels and headings.
-- Body: 16px, line-height 1.5.
-- Small: 14px, line-height 1.45, only for meta that is still 4.5:1. Do not go below 14px.
-- Title: 28px. Page title: 36px. Line-height about 1.2.
+- Family: system stack (`-apple-system`, `Segoe UI`, Inter). Weight 400 for body, 600 for names.
+- Body: 13–14px. Secondary text `#6b7280`.
+- Page titles stay short. The chat canvas is mostly whitespace.
 - Measure: 65ch on paragraphs.
 - Sentence case. Headings are short.
 
@@ -65,15 +64,15 @@ Buttons are verbs: Find jobs, Make my resume, Save this job, Send this email.
 
 Errors name the problem and the next step: “Add your name, then press Next.”
 
-## Navigation
+## Shell
 
-Default:
+Light grey rail (`#f5f5f5`), about 240px, no heavy border. Search is a pill. Sections are Group chats, Helpers, and Tools. You sits at the bottom.
 
-- Find jobs
-- My applications
-- Chat with helper
+The chat canvas is white. The helper name is a centered pill. The model, screen, and menu sit on the right. An empty chat centers a diamond face, the name, and one grey line.
 
-Home is the start page with those three as big choices. Settings and advanced tools (helpers setup, skills, job-site links, routines, memory, library, how you are doing) sit under **More tools**.
+The profile drawer is about 410px: a round search field and a flat list (Overview through History). The side panel is about 400px with Screen, Routines, Browser, and Data, plus a Works on grid (Auto, Cloud, Private sandbox, This computer).
+
+Find jobs, applications, resumes, and connected apps stay reachable from Tools. Display names are Scout, Tailor, Note, Tracker, Coach, and Guide. Stored names stay so @mentions keep working.
 
 ## Motion
 
