@@ -18,10 +18,6 @@
   --card: rgba(255, 250, 245, 0.78);
   --danger: #9c3d32;
   --shadow: 0 16px 40px rgba(44, 36, 30, 0.08);
-  color-scheme: light dark;
-}
-
-:root:has(> head > meta[name="color-scheme"][content="light"]) {
   color-scheme: light;
 }
 
