@@ -25,7 +25,8 @@ function JobsBody() {
   const queryFromUrl = params.get("q") || "";
   const locationFromUrl = params.get("location") || "";
   const auto = Boolean(queryFromUrl || locationFromUrl);
-  const [q, setQ] = useState(queryFromUrl || profile.targetRoles[0] || "");
+  const role = profile.targetRoles.find((item) => item.trim() && !/^any job$/i.test(item.trim())) || "";
+  const [q, setQ] = useState(queryFromUrl || role);
   const [location, setLocation] = useState(locationFromUrl || profile.locations[0] || "");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [loading, setLoading] = useState(auto);
@@ -38,7 +39,8 @@ function JobsBody() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/jobs?q=${encodeURIComponent(q)}&location=${encodeURIComponent(location)}`);
+      const roleQuery = /^any job$/i.test(q.trim()) ? "" : q;
+      const res = await fetch(`/api/jobs?q=${encodeURIComponent(roleQuery)}&location=${encodeURIComponent(location)}`);
       const json = await res.json();
       setLoading(false);
       if (!res.ok) {

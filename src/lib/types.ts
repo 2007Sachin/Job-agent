@@ -18,6 +18,7 @@ export type Job = {
   source: string;
   url: string;
   description: string;
+  tags?: string[];
   salaryLabel?: string;
   postedAt: string;
 };
