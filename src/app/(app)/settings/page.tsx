@@ -3,7 +3,7 @@
 import { ADVANCED_KEY, readAdvanced } from "@/lib/advanced";
 import { showTestFixtures } from "@/lib/test-fixture";
 import { useStore } from "@/lib/store";
-import { getBrowserSupabase } from "@/lib/supabase/browser";
+import { clientAuth } from "@/lib/firebase/browser";
 import { emptyProfile } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -100,20 +100,20 @@ function SettingsBody() {
   }
 
   async function exportRemote() {
-    const sb = getBrowserSupabase();
-    const session = sb ? (await sb.auth.getSession()).data.session : null;
-    if (!session) {
-      setMessage("Remote export needs a Supabase session. The file from this device is still available.");
+    const auth = clientAuth();
+    const user = auth?.currentUser;
+    if (!user) {
+      setMessage("Remote export needs a Firebase sign-in. The file from this device is still available.");
       exportLocal();
       return;
     }
-    const res = await fetch("/api/account/export", { headers: { Authorization: `Bearer ${session.access_token}` } });
+    const res = await fetch("/api/account/export", { headers: { Authorization: `Bearer ${await user.getIdToken()}` } });
     const json = await res.json();
     const blob = new Blob([JSON.stringify(json, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "job-agent-supabase.json";
+    a.download = "job-agent-firebase.json";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -123,12 +123,12 @@ function SettingsBody() {
       setMessage("Type DELETE to confirm.");
       return;
     }
-    const sb = getBrowserSupabase();
-    const session = sb ? (await sb.auth.getSession()).data.session : null;
-    if (session) {
+    const auth = clientAuth();
+    const user = auth?.currentUser;
+    if (user) {
       const res = await fetch("/api/account/delete", {
         method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${await user.getIdToken()}`, "Content-Type": "application/json" },
         body: JSON.stringify({ confirm: "DELETE" }),
       });
       const json = await res.json();
@@ -177,11 +177,11 @@ function SettingsBody() {
       </p>
       <div className="flex flex-wrap gap-3">
         <button type="button" className="border border-line px-3 py-2" onClick={exportLocal}>Export data on this device</button>
-        <button type="button" className="border border-line px-3 py-2" onClick={() => void exportRemote()}>Export Supabase copy</button>
+        <button type="button" className="border border-line px-3 py-2" onClick={() => void exportRemote()}>Export Firebase copy</button>
       </div>
       <div className="border border-line p-4">
         <h2 className="text-2xl">Delete account data</h2>
-        <p className="mt-2 text-sm text-muted">Type DELETE. Demo mode clears this browser. A Supabase session also deletes your rows, and the auth user when the service role key is set.</p>
+        <p className="mt-2 text-sm text-muted">Type DELETE. Demo mode clears this browser. A Firebase sign-in also deletes your Firestore data and the Auth user when admin credentials are set.</p>
         <input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-3 w-full border border-line bg-card px-3 py-2" placeholder="DELETE" />
         <button type="button" className="mt-3 bg-danger px-3 py-2 text-paper" onClick={() => void destroy()}>Delete</button>
       </div>

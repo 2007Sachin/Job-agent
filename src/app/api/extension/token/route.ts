@@ -1,6 +1,6 @@
 import { rememberToken } from "@/lib/extension-remote";
 import { extensionSecret, signExtensionToken } from "@/lib/extension-token";
-import { userFromAuthHeader } from "@/lib/supabase/server";
+import { userFromAuthHeader } from "@/lib/firebase/server";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";

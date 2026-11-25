@@ -2,58 +2,62 @@
 
 import { SiteHeader } from "./site-header";
 import { useStore } from "@/lib/store";
-import { getBrowserSupabase, supabaseConfigured } from "@/lib/supabase/browser";
+import { clientAuth, firebaseConfigured } from "@/lib/firebase/browser";
+import { GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
 function Form({ mode }: { mode: "login" | "signup" }) {
-  const { signInDemo, adoptSupabaseUser } = useStore();
+  const { signInDemo, adoptFirebaseUser } = useStore();
   const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(params.get("error") ? "Sign-in did not finish. Try again." : "");
   const [pending, setPending] = useState(false);
-  const configured = supabaseConfigured();
+  const configured = firebaseConfigured();
+
+  async function finish(user: { uid: string; email: string | null; getIdToken: () => Promise<string> }) {
+    const token = await user.getIdToken();
+    await fetch("/api/session", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    adoptFirebaseUser(user.uid, user.email ?? email);
+    router.push("/onboarding");
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage("");
-    const sb = getBrowserSupabase();
-    if (!sb) {
-      setMessage("Supabase is not configured. Use the demo desk, or add the keys in .env.local.");
+    const auth = clientAuth();
+    if (!auth) {
+      setMessage("Firebase is not configured. Use the demo desk, or add the keys in .env.local.");
       return;
     }
     setPending(true);
-    const redirect = `${window.location.origin}/auth/callback?next=/onboarding`;
-    const result = mode === "signup"
-      ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: redirect } })
-      : await sb.auth.signInWithPassword({ email, password });
-    setPending(false);
-    if (result.error) {
-      setMessage(result.error.message);
-      return;
+    try {
+      const cred = mode === "signup"
+        ? await createUserWithEmailAndPassword(auth, email, password)
+        : await signInWithEmailAndPassword(auth, email, password);
+      await finish(cred.user);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Sign-in did not finish.");
+    } finally {
+      setPending(false);
     }
-    if (result.data.session?.user) {
-      adoptSupabaseUser(result.data.session.user.id, result.data.session.user.email ?? email);
-      router.push("/onboarding");
-      return;
-    }
-    setMessage("Check your inbox to confirm the address, then log in.");
   }
 
   async function google() {
-    const sb = getBrowserSupabase();
-    if (!sb) {
-      setMessage("Add Supabase keys before Google sign-in.");
+    const auth = clientAuth();
+    if (!auth) {
+      setMessage("Add Firebase keys before Google sign-in.");
       return;
     }
-    const { error } = await sb.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=/onboarding` },
-    });
-    if (error) setMessage(error.message);
+    try {
+      const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+      await finish(cred.user);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Google sign-in did not finish.");
+    }
   }
 
   return (
@@ -61,7 +65,7 @@ function Form({ mode }: { mode: "login" | "signup" }) {
       <SiteHeader />
       <main className="mx-auto max-w-md px-5 py-16">
         <h1 className="text-5xl">{mode === "login" ? "Log in" : "Create an account"}</h1>
-        <p className="mt-3 text-muted">Email and Google use Supabase Auth. The demo desk works with no keys and stays in this browser.</p>
+        <p className="mt-3 text-muted">Email and Google use Firebase Auth. The demo desk works with no keys and stays in this browser.</p>
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <label className="block text-sm">
             Email
@@ -77,7 +81,7 @@ function Form({ mode }: { mode: "login" | "signup" }) {
         </form>
         <div className="mt-4 flex flex-col gap-3">
           <button type="button" onClick={() => void google()} className="border border-line px-4 py-2 text-left" disabled={!configured}>
-            Continue with Google {configured ? "" : "(needs Supabase)"}
+            Continue with Google {configured ? "" : "(needs Firebase)"}
           </button>
           <button
             type="button"

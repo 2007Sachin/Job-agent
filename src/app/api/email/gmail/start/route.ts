@@ -1,4 +1,4 @@
-import { supabaseFromCookies } from "@/lib/supabase/server";
+import { userFromAuthHeader } from "@/lib/firebase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -7,9 +7,9 @@ export async function GET(request: Request) {
   if (!clientId || !process.env.GOOGLE_CLIENT_SECRET) {
     return NextResponse.redirect(new URL("/settings?gmail=missing", origin));
   }
-  const supabase = await supabaseFromCookies();
-  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
-  if (!user) return NextResponse.redirect(new URL("/login?next=/settings", origin));
+  const auth = await userFromAuthHeader(request);
+  if (!auth) return NextResponse.redirect(new URL("/login?next=/settings", origin));
+  const user = auth.user;
   const state = crypto.randomUUID();
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", clientId);

@@ -22,7 +22,7 @@ export default function AppsPage() {
   function write(next: Row[]) {
     setRows(next);
     localStorage.setItem(KEY, JSON.stringify(next));
-    if (user?.mode === "supabase") {
+    if (user?.mode === "firebase") {
       void fetch("/api/apps", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rows: next }) });
     }
   }

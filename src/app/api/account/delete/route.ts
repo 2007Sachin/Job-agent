@@ -1,4 +1,4 @@
-import { supabaseAdmin, userFromAuthHeader } from "@/lib/supabase/server";
+import { adminAuth, adminDb, userFromAuthHeader } from "@/lib/firebase/server";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -10,19 +10,17 @@ export async function POST(request: Request) {
   }
   const auth = await userFromAuthHeader(request);
   if (!auth) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
-  const id = auth.user.id;
-  for (const table of ["messages", "conversations", "desk_records", "skills", "bots", "outreach", "applications", "usage_daily", "gmail_tokens"] as const) {
-    await auth.client.from(table).delete().eq("user_id", id);
+  const db = adminDb();
+  const authAdmin = adminAuth();
+  if (!db || !authAdmin) {
+    return NextResponse.json({ error: "Firebase admin is not configured." }, { status: 503 });
   }
-  await auth.client.from("profiles").delete().eq("id", id);
-  const admin = supabaseAdmin();
-  if (!admin) {
-    return NextResponse.json({
-      deleted: "rows",
-      note: "Profile rows were removed. Set SUPABASE_SERVICE_ROLE_KEY so the auth user can be deleted too. You are still signed in until then.",
-    });
+  const user = db.collection("users").doc(auth.user.id);
+  for (const name of ["messages", "conversations", "desk", "skills", "bots", "outreach", "applications", "usage", "apps", "private"]) {
+    const snap = await user.collection(name).get();
+    await Promise.all(snap.docs.map((row) => row.ref.delete()));
   }
-  const { error } = await admin.auth.admin.deleteUser(id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await user.delete();
+  await authAdmin.deleteUser(auth.user.id);
   return NextResponse.json({ deleted: "account" });
 }

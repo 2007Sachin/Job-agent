@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "./supabase/server";
+import { adminDb } from "./firebase/server";
 import type { Job } from "./types";
 import { createHash } from "crypto";
 
@@ -6,50 +6,44 @@ function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-function userId(subject: string) {
-  return /^[0-9a-f-]{36}$/i.test(subject) ? subject : null;
-}
-
 export async function rememberToken(token: string, subject: string) {
-  const admin = supabaseAdmin();
-  if (!admin) return;
-  await admin.from("extension_tokens").upsert({
-    token_hash: hashToken(token),
+  const db = adminDb();
+  if (!db) return;
+  await db.collection("extensionTokens").doc(hashToken(token)).set({
     subject,
-    user_id: userId(subject),
     revoked: false,
+    updatedAt: new Date().toISOString(),
   });
 }
 
 export async function rememberRevoke(token: string) {
-  const admin = supabaseAdmin();
-  if (!admin) return;
-  await admin.from("extension_tokens").update({ revoked: true }).eq("token_hash", hashToken(token));
+  const db = adminDb();
+  if (!db) return;
+  await db.collection("extensionTokens").doc(hashToken(token)).set({ revoked: true }, { merge: true });
 }
 
 export async function remoteRevoked(token: string) {
-  const admin = supabaseAdmin();
-  if (!admin) return false;
-  const { data } = await admin.from("extension_tokens").select("revoked").eq("token_hash", hashToken(token)).maybeSingle();
-  return Boolean(data?.revoked);
+  const db = adminDb();
+  if (!db) return false;
+  const snap = await db.collection("extensionTokens").doc(hashToken(token)).get();
+  return Boolean(snap.data()?.revoked);
 }
 
 export async function rememberJob(subject: string, job: Job) {
-  const admin = supabaseAdmin();
-  if (!admin) return;
-  await admin.from("extension_jobs").upsert({
-    id: job.id,
+  const db = adminDb();
+  if (!db) return;
+  await db.collection("extensionJobs").doc(job.id).set({
     subject,
-    user_id: userId(subject),
     payload: job,
+    updatedAt: new Date().toISOString(),
   });
 }
 
 export async function takeRemoteJobs(subject: string): Promise<Job[]> {
-  const admin = supabaseAdmin();
-  if (!admin) return [];
-  const { data } = await admin.from("extension_jobs").select("id, payload").eq("subject", subject);
-  const jobs = (data ?? []).map((row) => row.payload as Job).filter((job) => job?.id);
-  if (jobs.length) await admin.from("extension_jobs").delete().eq("subject", subject);
+  const db = adminDb();
+  if (!db) return [];
+  const snap = await db.collection("extensionJobs").where("subject", "==", subject).get();
+  const jobs = snap.docs.map((row) => row.data().payload as Job).filter((job) => job?.id);
+  await Promise.all(snap.docs.map((row) => row.ref.delete()));
   return jobs;
 }
