@@ -17,12 +17,13 @@ export default function TrackerPage() {
   const { applications, setStage } = useStore();
   return (
     <div>
-      <PageHeader title="Applications" lede="Drag a card, or use the stage menu. The employer site is still where you submit." action={<Link href="/jobs" className="border border-line px-3 py-2 text-sm">Add from Jobs</Link>} />
+      <PageHeader title="My applications" lede="Move a card when the job changes. You still apply on the company site." action={<Link href="/jobs" className="btn bg-brass">Find jobs</Link>} />
+      {!applications.length && <p className="mb-4">Nothing saved yet. Press Find jobs, open one, and press Save this job.</p>}
       <div className="mt-6 flex gap-3 overflow-x-auto pb-4">
         {STAGES.map((stage) => (
           <section
             key={stage}
-            className="min-w-[220px] flex-1 border border-line p-3"
+            className="min-w-[160px] flex-1 border border-line p-3"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               const id = e.dataTransfer.getData("text/plain");

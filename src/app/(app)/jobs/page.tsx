@@ -53,8 +53,8 @@ export default function JobsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-5xl">Jobs</h1>
-        <p className="mt-2 max-w-[62ch] text-muted">Search is not tied to one function. Public sources plus a description you paste. Nothing is scraped from LinkedIn.</p>
+        <h1 className="text-4xl">Find jobs</h1>
+        <p className="mt-2 max-w-[62ch]">Type the work you want. We search public job lists. We do not open LinkedIn for you.</p>
       </div>
       <form onSubmit={search} className="flex flex-col gap-3 sm:flex-row">
         <label className="flex-1 text-sm">Role or keywords
@@ -63,13 +63,13 @@ export default function JobsPage() {
         <label className="flex-1 text-sm">Location
           <input value={location} onChange={(e) => setLocation(e.target.value)} className="mt-1 w-full border border-line bg-card px-3 py-2" placeholder="City, Remote, India" />
         </label>
-        <button className="self-end bg-ink px-4 py-2 text-paper" disabled={loading}>{loading ? "Searching…" : "Search"}</button>
+        <button className="self-end bg-brass" disabled={loading}>{loading ? "Looking…" : "Find jobs"}</button>
       </form>
       {warnings.length > 0 && (
         <ul className="text-sm text-muted">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>
       )}
       {error && <p className="text-sm text-danger">{error}</p>}
-      {!rows.length && <p className="text-muted">No roles matched. Try different words, or paste a description below.</p>}
+      {!rows.length && <p>No jobs yet. Press Find jobs, or paste a job description below.</p>}
       <ul className="divide-y divide-line border-y border-line">
         {rows.map((job) => {
           const match = scoreMatch(profile, job);

@@ -1,6 +1,7 @@
 "use client";
 
 import { Kip } from "@/components/kip";
+import { botHint, plainBot } from "@/lib/plain";
 import { useStore } from "@/lib/store";
 import type { ToolCard } from "@/lib/workspace";
 import Link from "next/link";
@@ -118,30 +119,30 @@ export default function ChatPage() {
   return (
     <div className="-mx-5 -my-8 grid min-h-[calc(100vh-1px)] md:grid-cols-[240px_1fr]">
       <aside className="border-b border-line md:border-b-0 md:border-r">
-        <p className="px-4 py-4 text-sm">Chat</p>
-        <p className="px-4 text-xs text-muted">Bots</p>
+        <p className="px-4 py-4 font-semibold">Helpers</p>
         <ul className="mt-2">
           {store.bots.map((b) => (
             <li key={b.id}>
-              <button type="button" onClick={() => setBotId(b.id)} className={`w-full px-4 py-2 text-left text-sm ${b.id === bot?.id ? "bg-ink text-paper" : ""}`}>
-                {b.name}
+              <button type="button" onClick={() => setBotId(b.id)} className={`w-full px-4 py-2 text-left ${b.id === bot?.id ? "bg-ink text-paper" : ""}`}>
+                <span className="block">{plainBot(b.name)}</span>
+                <span className="block text-sm">{botHint(b.name)} You can still type @{b.name}.</span>
               </button>
             </li>
           ))}
         </ul>
-        <p className="mt-4 px-4 text-xs text-muted">Rooms</p>
+        <p className="mt-4 px-4 font-semibold">Group chats</p>
         <ul className="mt-1 px-4 text-sm">
           {store.rooms.map((room) => (
             <li key={room.id}><Link href={`/rooms/${room.id}`} className="underline">{room.name}</Link></li>
           ))}
-          <li className="mt-1"><Link href="/rooms" className="text-muted">New room</Link></li>
+          <li className="mt-1"><Link href="/rooms" className="underline">Start a group chat</Link></li>
         </ul>
         <p className="mt-4 px-4 text-xs text-muted">Conversations</p>
         <ul className="mt-2 px-4 pb-4 text-sm text-muted">
           {store.conversations.map((c) => (
             <li key={c.id} className="py-1">{c.title}</li>
           ))}
-          {!store.conversations.length && <li>No threads yet.</li>}
+          {!store.conversations.length && <li>No chats yet. Type a message to start.</li>}
         </ul>
       </aside>
       <section className="flex min-h-[70vh] flex-col">
@@ -149,7 +150,8 @@ export default function ChatPage() {
           {!messages.length && (
             <div className="max-w-md">
               <Kip mood="idle" className="h-20 w-20" />
-              <h1 className="mt-3 text-4xl">Ask {bot?.name}</h1>
+              <h1 className="mt-3 text-4xl">Ask the {plainBot(bot?.name || "helper").toLowerCase()}</h1>
+              <p className="mt-2">{bot ? botHint(bot.name) : ""}</p>
               <p className="mt-2 text-muted">{bot?.role} Mention another bot with @ to hand off.</p>
             </div>
           )}

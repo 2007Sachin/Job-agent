@@ -123,8 +123,8 @@ export default function JobDetailPage() {
         <p className="mt-2 text-muted">{job.company} · {job.location}{job.salaryLabel ? ` · ${job.salaryLabel}` : ""}</p>
         <p className="mt-4 max-w-[62ch]">{match.score} match. {match.reasons.join(" ")}</p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <button type="button" className="bg-ink px-3 py-2 text-sm text-paper" onClick={() => store.saveJob(job)}>
-            {application ? `On tracker: ${application.stage}` : "Save"}
+          <button type="button" className="bg-brass" onClick={() => { store.saveJob(job); setNote("Saved. Open My applications to see it."); }}>
+            {application ? `Saved (${application.stage})` : "Save this job"}
           </button>
           {job.url && (
             <a className="border border-line px-3 py-2 text-sm" href={job.url} target="_blank" rel="noreferrer">Open apply link</a>
@@ -158,6 +158,7 @@ export default function JobDetailPage() {
         title="Tailored resume"
         value={application?.tailoredResume ?? ""}
         onChange={(tailoredResume) => application && store.patchApplication(application.id, { tailoredResume })}
+        actionLabel="Make my resume"
         onGenerate={() => void generate("resume")}
         busy={busy === "resume"}
         onDocx={() => downloadDocx(`${job.company}-resume.docx`, job.title, application?.tailoredResume || "")}
@@ -227,13 +228,13 @@ export default function JobDetailPage() {
   );
 }
 
-function Draft({ title, value, onChange, onGenerate, busy, onDocx, onPdf }: { title: string; value: string; onChange: (v: string) => void; onGenerate: () => void; busy: boolean; onDocx: () => void; onPdf: () => void }) {
+function Draft({ title, value, onChange, onGenerate, busy, onDocx, onPdf, actionLabel = "Write this" }: { title: string; value: string; onChange: (v: string) => void; onGenerate: () => void; busy: boolean; onDocx: () => void; onPdf: () => void; actionLabel?: string }) {
   return (
     <section className="space-y-3">
       <h2 className="text-3xl">{title}</h2>
       <textarea rows={10} value={value} onChange={(e) => onChange(e.target.value)} className="w-full border border-line bg-card px-3 py-2" />
       <div className="flex flex-wrap gap-2">
-        <button type="button" className="border border-line px-3 py-2 text-sm" onClick={onGenerate}>{busy ? "Writing…" : "Generate"}</button>
+        <button type="button" className="border border-line" onClick={onGenerate}>{busy ? "Writing…" : actionLabel}</button>
         <button type="button" className="border border-line px-3 py-2 text-sm" onClick={onDocx} disabled={!value}>DOCX</button>
         <button type="button" className="border border-line px-3 py-2 text-sm" onClick={onPdf} disabled={!value}>Print / PDF</button>
       </div>
