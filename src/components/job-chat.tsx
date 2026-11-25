@@ -1,5 +1,6 @@
 "use client";
 
+import { aiAuthHeaders, publishQuota } from "@/lib/ai-auth";
 import { useStore } from "@/lib/store";
 import type { Job } from "@/lib/types";
 import Link from "next/link";
@@ -38,7 +39,7 @@ export function JobChat({ jobId }: { jobId: string }) {
     setError("");
     const res = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await aiAuthHeaders()) },
       body: JSON.stringify({
         text: `This thread is only about this saved job.\nTitle: ${job.title}\nEmployer: ${job.company}\nLocation: ${job.location}\nDescription:\n${job.description.slice(0, 2000)}\n\nQuestion: ${prompt}`,
         bot,
@@ -49,9 +50,13 @@ export function JobChat({ jobId }: { jobId: string }) {
     });
     if (!res.ok || !res.body) {
       setBusy(false);
-      setError("The chat could not answer. Try again.");
+      const json = await res.json().catch(() => ({}));
+      if (typeof json.remaining === "number") publishQuota(json);
+      setError(json.error || "The chat could not answer. Try again.");
       return;
     }
+    const remaining = Number(res.headers.get("X-AI-Remaining"));
+    if (Number.isFinite(remaining)) publishQuota({ remaining, limit: Number(res.headers.get("X-AI-Limit")) });
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";

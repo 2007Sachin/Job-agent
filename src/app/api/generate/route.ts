@@ -1,6 +1,5 @@
-import { clientKey } from "@/lib/job-sources";
+import { consumeAiCall } from "@/lib/ai-quota";
 import { apiModel, complete, llmConfigured } from "@/lib/llm";
-import { enforceDailyCap } from "@/lib/rate-limit";
 import { templateCover, templateEmail, templateLinkedIn, templateResume } from "@/lib/templates";
 import { noteUsage } from "@/lib/usage-log";
 import type { Job, Profile } from "@/lib/types";
@@ -25,13 +24,10 @@ export async function POST(request: Request) {
   if (!body.kind || !body.profile || !body.job) {
     return NextResponse.json({ error: "Missing profile, job, or kind." }, { status: 400 });
   }
-  const limit = enforceDailyCap(`llm:${clientKey(request)}`);
+  const limit = await consumeAiCall(request);
   void noteUsage(request, "generate");
   if (!limit.ok) {
-    return NextResponse.json(
-      { error: `Daily generation cap (${limit.limit}) reached. Raise LLM_DAILY_CAP or wait until tomorrow.` },
-      { status: 429 },
-    );
+    return NextResponse.json({ error: limit.error, remaining: limit.remaining, limit: limit.limit }, { status: limit.status });
   }
 
   const fallback = () => {
@@ -48,9 +44,11 @@ export async function POST(request: Request) {
         text: "",
         source: "none",
         note: "No free model key is configured. Paste a draft. Job-agent will not write a biography for you.",
+        remaining: limit.remaining,
+        limit: limit.limit,
       });
     }
-    return NextResponse.json({ ...fallback(), note: "No free model key is configured. This draft is a local template from your profile." });
+    return NextResponse.json({ ...fallback(), note: "No free model key is configured. This draft is a local template from your profile.", remaining: limit.remaining, limit: limit.limit });
   }
 
   try {
@@ -67,7 +65,7 @@ export async function POST(request: Request) {
       temperature: typeof body.temperature === "number" ? body.temperature : undefined,
     });
     const subject = text.startsWith("Subject:") ? text.split("\n")[0].replace(/^Subject:\s*/, "") : undefined;
-    return NextResponse.json({ text, subject, source: "llm", remaining: limit.remaining });
+    return NextResponse.json({ text, subject, source: "llm", remaining: limit.remaining, limit: limit.limit });
   } catch (error) {
     const message = error instanceof Error ? error.message : "LLM error";
     if (body.kind === "resume") {

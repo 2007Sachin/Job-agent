@@ -2,6 +2,7 @@
 
 import { CATALOG } from "@/lib/catalog";
 import { downloadDocx, downloadPdfViaPrint } from "@/lib/export-doc";
+import { aiAuthHeaders, publishQuota } from "@/lib/ai-auth";
 import { scoreMatch } from "@/lib/match";
 import { sourceLabel } from "@/lib/source-label";
 import { useStore } from "@/lib/store";
@@ -47,11 +48,12 @@ export default function JobDetailPage() {
     setNote("");
     const res = await fetch("/api/generate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await aiAuthHeaders()) },
       body: JSON.stringify({ kind, profile: store.profile, job, userId: store.user?.id }),
     });
     const json = await res.json();
     setBusy("");
+    if (typeof json.remaining === "number") publishQuota(json);
     if (!res.ok) {
       const message = json.error || "Generation failed";
       if (kind === "resume") setResumeError(message);

@@ -30,7 +30,8 @@ service cloud.firestore {
         allow read, write: if owner(userId);
       }
       match /usage/{id} {
-        allow read, write: if owner(userId);
+        allow read: if owner(userId);
+        allow write: if false;
       }
       match /apps/{id} {
         allow read, write: if owner(userId);

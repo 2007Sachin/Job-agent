@@ -1,5 +1,6 @@
 "use client";
 
+import { aiAuthHeaders, publishQuota } from "@/lib/ai-auth";
 import { JobChat } from "@/components/job-chat";
 import { ScreenState } from "@/components/screen-state";
 import { HelperDrawer } from "@/components/helper-drawer";
@@ -92,7 +93,7 @@ function ChatBody() {
     setLive({ content: "", tools: [] });
     const res = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await aiAuthHeaders()) },
       body: JSON.stringify({
         text: `${prompt}${attachment ? `\n\nAttachment:\n${attachment.slice(0, 3000)}` : ""}`,
         bot,
@@ -104,9 +105,14 @@ function ChatBody() {
     });
     if (!res.ok || !res.body) {
       setBusy(false);
-      setChatError("The helper could not answer. Check the connection and send again.");
+      const json = await res.json().catch(() => ({}));
+      if (typeof json.remaining === "number") publishQuota(json);
+      setChatError(json.error || "The helper could not answer. Check the connection and send again.");
       return;
     }
+    const remaining = Number(res.headers.get("X-AI-Remaining"));
+    const cap = Number(res.headers.get("X-AI-Limit"));
+    if (Number.isFinite(remaining)) publishQuota({ remaining, limit: cap });
     setChatError("");
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
