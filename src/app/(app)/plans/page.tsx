@@ -20,6 +20,7 @@ export default function PlansPage() {
           <h2 className="text-[16px] font-medium">Free</h2>
           <ul className="list-disc space-y-1 pl-5 text-[14px]">
             <li>5 tailored resumes a month</li>
+            <li>Cover letters for those jobs</li>
             <li>Save jobs and track applications</li>
             <li>Follow-up dates on this device</li>
           </ul>
@@ -29,7 +30,6 @@ export default function PlansPage() {
           <p className="text-[13px] text-danger">Coming soon. No charge.</p>
           <ul className="list-disc space-y-1 pl-5 text-[14px] text-[var(--muted)]">
             <li>Unlimited tailored resumes</li>
-            <li>Cover letters for each job</li>
             <li>Follow-up reminders by email</li>
           </ul>
         </section>
