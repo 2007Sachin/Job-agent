@@ -1,18 +1,34 @@
 # Job-agent
 
-Suggested product name: **Kipdesk**. The mascot is Kip, a river kite drawn for this app. The repository and UI still say Job-agent until the name is chosen.
+A job-search desk for people in India: keep one profile, find roles from permitted sources, see how well each one fits, and get a tailored resume, cover letter and outreach drafts. You stay in control of what gets sent.
 
-The signed-in desk opens on Home. Primary navigation is Home, Chat, Jobs, Applications, and Insights. Bots, skills, connectors, routines, memory, the library, usage, and settings live under Workspace. Chat lists one-to-one bots and group rooms together. Activity and tasks show on Home. Onboarding lands on Home.
+**Live app:** [job-agent-beta-seven.vercel.app](https://job-agent-beta-seven.vercel.app) (demo mode works without an account)
 
-Chat is one desk among those. Starter bots are Job Scout, Resume Tailor, Outreach Writer, Application Coach, and Interview Prep. Mention another bot with `@` to hand off. Skills are markdown instructions plus an allow-list of tools. Connectors are either a public API (Remotive, and Adzuna, Greenhouse, and Lever when configured) or assist-only (LinkedIn, Naukri, Instahyre, Hirist, Cutshort, Wellfound, Indeed, Foundit): a deep link, a paste box, and drafts. Those sites are not scraped, and their passwords are never stored.
+![Job-agent landing page](docs/images/landing.png)
 
-Workspace rows live in Firestore under `users/{uid}` when Firebase is configured. Rules in `firestore.rules` allow only that user to read and write them. Demo mode keeps them in the browser. The chat route streams a planned reply. With no model key it uses the same local templates as the job desk. Email still sends only after consent and an explicit send on the job page. Approving a card in chat does not send mail.
+## Problem
 
-Rooms, tasks, schedules, memory, a file library, activity, a command palette (Ctrl or Cmd K), and a usage meter are on this branch. Schedules do not run in the background. Run now performs the routine once. Those records are the `desk` subcollection.
+Job seekers juggle a dozen portals, rewrite the same resume for every posting, and lose track of who they contacted. Tools that "auto-apply" spray low-quality applications and break portal rules.
+
+## Approach
+
+Do the preparation, never the submission. Job-agent drafts and tracks; the person approves every application and every email.
+
+```mermaid
+flowchart LR
+    A[Profile + resume] --> B[Search permitted sources<br/>Remotive, Adzuna, Greenhouse, Lever]
+    B --> C[Match score<br/>skills, role, location, pay, experience]
+    C --> D[Tailored drafts<br/>resume, cover letter, LinkedIn note, email]
+    D --> E{You approve}
+    E --> F[You apply / email sends after consent]
+    F --> G[Tracker + follow-ups + insights]
+```
+
+## What it does
 
 Job-agent helps people in India apply for work in any function or seniority. It keeps a profile, searches permitted public sources, scores a posting against that profile, drafts a resume, cover letter, LinkedIn note, and email, and tracks stages. You submit applications yourself. Email goes out only after you approve that message.
 
-## What works
+### What works
 
 - Marketing pages: home, features, pricing placeholder, FAQ.
 - Email + password and Google sign-in when Firebase is configured. A demo desk works with no keys and stores data in the browser.
@@ -25,7 +41,7 @@ Job-agent helps people in India apply for work in any function or seniority. It 
 - Analytics charts from local tracker data. Open and reply are manual marks. There is no tracking pixel.
 - Export and delete. Firestore rules limit documents to the signed-in user. Deleting the Auth user needs the Firebase admin credentials.
 
-## What is stubbed or limited
+### What is stubbed or limited
 
 - Pricing is a placeholder. Nothing is billed.
 - AI routes (`/api/chat` and `/api/generate`) allow `AI_DAILY_LIMIT_PER_USER` actions per UTC day (default 20). Signed-in counts are an atomic Firestore increment on `users/{uid}/usage/ai-YYYY-MM-DD`. Clients may read that document and cannot write it. Demo mode, with no Firebase admin credentials, uses an in-memory counter. A request with no Firebase user and no extension token is rejected when Firebase admin is configured. Over the cap the API returns 429.
@@ -34,6 +50,10 @@ Job-agent helps people in India apply for work in any function or seniority. It 
 - Resume upload parses PDF and `.txt`. It does not parse DOCX. The resume text is saved on the profile. Files are not uploaded (no Firebase Storage).
 - Demo catalog companies are fictional.
 - Email open/reply analytics are self-reported.
+
+## Tech stack
+
+Next.js, React, TypeScript · Firebase Auth and Firestore (Spark plan) · any OpenAI-compatible LLM endpoint (Gemini, Groq, NVIDIA NIM) · Gmail OAuth or SMTP · Recharts · Vitest · Chrome extension in `extension/` · Vercel
 
 ## Setup
 
@@ -78,3 +98,18 @@ npm run lint
 npm test
 npm run build
 ```
+
+## Workspace and chat
+
+The signed-in desk opens on Home. Primary navigation is Home, Chat, Jobs, Applications, and Insights. Bots, skills, connectors, routines, memory, the library, usage, and settings live under Workspace. Chat lists one-to-one bots and group rooms together. Activity and tasks show on Home. Onboarding lands on Home.
+
+Chat is one desk among those. Starter bots are Job Scout, Resume Tailor, Outreach Writer, Application Coach, and Interview Prep. Mention another bot with `@` to hand off. Skills are markdown instructions plus an allow-list of tools. Connectors are either a public API (Remotive, and Adzuna, Greenhouse, and Lever when configured) or assist-only (LinkedIn, Naukri, Instahyre, Hirist, Cutshort, Wellfound, Indeed, Foundit): a deep link, a paste box, and drafts. Those sites are not scraped, and their passwords are never stored.
+
+Workspace rows live in Firestore under `users/{uid}` when Firebase is configured. Rules in `firestore.rules` allow only that user to read and write them. Demo mode keeps them in the browser. The chat route streams a planned reply. With no model key it uses the same local templates as the job desk. Email still sends only after consent and an explicit send on the job page. Approving a card in chat does not send mail.
+
+Rooms, tasks, schedules, memory, a file library, activity, a command palette (Ctrl or Cmd K), and a usage meter are on this branch. Schedules do not run in the background. Run now performs the routine once. Those records are the `desk` subcollection.
+
+## Product notes
+
+- Suggested product name: **Kipdesk**. The mascot is Kip, a river kite drawn for this app. The repository and UI still say Job-agent until the name is chosen.
+- Product intent and design decisions are in `PRODUCT.md` and `DESIGN.md`; research and audits are in `docs/`.
