@@ -28,7 +28,11 @@ function TagField({ label, hint, values, onChange, placeholder }: { label: strin
         ))}
       </div>
       <div className="mt-2 flex gap-2">
-        <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={placeholder} className="w-full" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} />
+        <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={placeholder} className="w-full" onKeyDown={(e) => {
+          if (e.key !== "Enter" || e.nativeEvent.isComposing || e.keyCode === 229) return;
+          e.preventDefault();
+          add();
+        }} />
         <button type="button" className="border border-line" onClick={add}>Add</button>
       </div>
     </fieldset>

@@ -8,12 +8,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
 };
 
-const themeScript = `try{var t=localStorage.getItem('jobagent-theme');if(t==='dark')document.documentElement.dataset.theme='dark'}catch(e){}`;
+const themeScript = `try{var t=localStorage.getItem('jobagent-theme');var m=document.querySelector('meta[name="color-scheme"]');if(t==='dark'){document.documentElement.dataset.theme='dark';if(m)m.content='dark'}else if(t==='light'&&m){m.content='light'}}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen antialiased">

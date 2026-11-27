@@ -12,6 +12,8 @@ export function ThemeToggle() {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     if (next === "dark") document.documentElement.dataset.theme = "dark";
     else delete document.documentElement.dataset.theme;
+    const meta = document.querySelector('meta[name="color-scheme"]');
+    if (meta) meta.setAttribute("content", next);
     localStorage.setItem("jobagent-theme", next);
     setDark(next === "dark");
   }
